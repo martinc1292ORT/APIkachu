@@ -1,0 +1,101 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 16px;
+  font-family: system-ui, sans-serif;
+  color: #333;
+}
+
+.title {
+  font-size: 2.4rem;
+  text-transform: capitalize;
+  margin-bottom: 24px;
+  text-align: center;
+  color: #ffcb05;
+  text-shadow: 2px 2px 0 #2a75bb;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  background: #f7f7f7;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image {
+  object-fit: contain;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  background: white;
+}
+
+.info h2,
+.info h3 {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  color: #2a75bb;
+}
+
+.pills,
+.abilities,
+.stats {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+
+.pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pills li {
+  background: #ffcb05;
+  color: #2a75bb;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.abilities li {
+  text-transform: capitalize;
+  margin-bottom: 4px;
+}
+
+.hidden {
+  color: #999;
+  font-style: italic;
+}
+
+.stats li {
+  margin-bottom: 6px;
+}
+
+.audio {
+  margin-top: 12px;
+}
+
+.backButton {
+  display: inline-block;
+  margin-top: 24px;
+  color: #2a75bb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.backButton:hover {
+  text-decoration: underline;
+}
+
+.error {
+  color: crimson;
+  text-align: center;
+  font-size: 1.2rem;
+  margin-top: 50px;
+}
