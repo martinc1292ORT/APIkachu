@@ -1,4 +1,5 @@
-import { getPokemonList } from "@/lib/pokeapi";
+import Link from "next/link";
+import { getPokemonList } from "@/api/pokeapi";
 import styles from "./page.module.css";
 
 export default async function Page() {
@@ -16,10 +17,15 @@ export default async function Page() {
       <ul className={styles.grid}>
         {data.results.map((p) => (
           <li key={p.name} className={styles.card}>
-            {p.name}
+            <Link href={`/pokemon/${p.name}`}>{p.name}</Link>
           </li>
         ))}
       </ul>
     </main>
   );
+}
+
+//para ponerle el nombre a la pestaña
+export async function generateMetadata() {
+  return { title: `APIkachu` };
 }
