@@ -1,30 +1,53 @@
-/* src/app/page.module.css */
-.container {
-  padding: 24px;
+.home {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.hero {
+  margin-bottom: 32px;
 }
 
 .title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 16px;
+  font-size: 2.4rem;
+  margin-bottom: 12px;
+  color: #2a75bb;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 16px;
+.subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 24px;
 }
 
-.card {
-  border: 1px solid #ddd;
+.links ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.links a {
+  text-decoration: none;
+  color: #2a75bb;
+  font-weight: 500;
+  border: 1px solid #2a75bb44;
+  padding: 8px 16px;
   border-radius: 8px;
-  padding: 12px;
-  text-transform: capitalize;
-  text-align: center;
-  transition: transform 0.2s;
+  transition: background 0.2s;
 }
 
-.card:hover {
-  transform: scale(1.05);
-  background-color: #f9f9f9;
+.links a:hover {
+  background: #2a75bb;
+  color: white;
+}
+
+.info {
+  font-size: 0.95rem;
+  opacity: 0.8;
+  line-height: 1.4;
 }
