@@ -1,5 +1,7 @@
 // Manejo de sesión local (por ahora solo en localStorage)
 const KEY = "apikachu_user";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export function getUser() {
   if (typeof window === "undefined") return null;
@@ -24,4 +26,12 @@ export function clearUser() {
 export function isLoggedIn() {
   const u = getUser();
   return !!(u && u.id);
+}
+
+export function useRequireUser() {
+  const router = useRouter();
+  useEffect(() => {
+    const raw = typeof window !== "undefined" ? localStorage.getItem("apikachu_user") : null;
+    if (!raw) router.replace("/login");
+  }, [router]);
 }

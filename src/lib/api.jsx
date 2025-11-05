@@ -13,17 +13,22 @@ async function request(path, options = {}) {
   return data;
 }
 
-// Ejemplos de endpoints que implementaremos en el back
 export const api = {
   register: (name) =>
     request("/auth/register", { method: "POST", body: JSON.stringify({ name }) }),
+
   me: () => request("/user", { method: "GET" }),
-  buyPack: (cost = 50) =>
-    request("/pack", { method: "POST", body: JSON.stringify({ cost }) }),
+
+  // 👇 ahora acepta objeto con cost y size
+  buyPack: ({ cost = 50, size = 3 } = {}) =>
+    request("/pack", { method: "POST", body: JSON.stringify({ cost, size }) }),
+
   setTeam: (ids) =>
     request("/user/team", { method: "PUT", body: JSON.stringify({ ids }) }),
+
   battle: (difficulty = "easy") =>
     request("/battle", { method: "POST", body: JSON.stringify({ difficulty }) }),
+
   evolve: (ownedId) =>
     request("/evolve", { method: "POST", body: JSON.stringify({ ownedId }) }),
 };

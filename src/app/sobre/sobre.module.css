@@ -1,0 +1,46 @@
+.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.title { font-size: 2rem; margin-bottom: 8px; color: #2a75bb; }
+.subtitle { font-size: 1.2rem; margin: 16px 0 8px; }
+
+.status {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+.label { font-size: 0.85rem; opacity: 0.8; }
+.value { font-weight: 600; }
+
+.actions { display: flex; gap: 12px; margin-bottom: 16px; }
+.primary, .secondary {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #2a75bb;
+}
+.primary { background: #2a75bb; color: #fff; }
+.secondary { background: transparent; color: #2a75bb; }
+.primary:disabled, .secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.helper { opacity: 0.8; }
+.error { color: #e74c3c; margin: 8px 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+.card {
+  border: 1px solid #2a75bb33;
+  border-radius: 12px;
+  padding: 12px;
+}
+.pokeName { text-transform: capitalize; font-weight: 600; margin-bottom: 4px; }
+.meta { display: flex; gap: 8px; font-size: 0.9rem; opacity: 0.9; }
+.link { display: inline-block; margin-top: 8px; color: #2a75bb; text-decoration: none; }
+
+.next { margin-top: 12px; }
+.next a { color: #2a75bb; text-decoration: none; }
