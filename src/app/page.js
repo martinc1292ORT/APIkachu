@@ -16,6 +16,7 @@ export default function HomePage() {
       <section className={styles.links}>
         <h2>Explorá el mundo Pokémon:</h2>
         <h2>ESTA ES LA RAMA DE MAX</h2>
+        <h2>ESTA ES LA RAMA DE MAX</h2>
         <ul>
           <li><Link href="/pokedex">📘 Pokédex</Link></li>
           <li><Link href="/sobre">🎁 Sobres</Link></li>
