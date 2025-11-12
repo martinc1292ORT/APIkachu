@@ -11,20 +11,29 @@ export default function NavBar() {
     <nav className={styles.navbar}>
       <div className={styles.left}>
         <Link href="/" className={styles.brand}>
-          APIkachu
+          <span className={styles.logo}>⚡</span> APIkachu
         </Link>
-        <Link href="/pokedex" className={styles.link}>
-          Pokédex
-        </Link>
-        <Link href="/batalla" className={styles.link}>
-          Batalla
-        </Link>
+
+        <div className={styles.menu}>
+          <Link href="/pokedex" className={styles.link}>
+            Pokédex
+          </Link>
+          <Link href="/batalla" className={styles.link}>
+            Batalla
+          </Link>
+          <Link href="/tienda" className={styles.link}>
+            Tienda
+          </Link>
+        </div>
       </div>
 
       <div className={styles.right}>
         {isAuthenticated ? (
           <>
-            <Link href="/perfil" className={styles.link}>
+            <div className={styles.points}>
+              🪙 {user?.points ?? 0}
+            </div>
+            <Link href="/perfil" className={styles.profileLink}>
               Perfil
             </Link>
             <button onClick={logout} className={styles.logoutBtn}>

@@ -15,17 +15,32 @@ export default function PokemonCard({ name, url }) {
   );
 }
 
+// Nuevo look oscuro, con borde sutil y hover
 const card = {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   textDecoration: "none",
-  border: "1px solid #e4e4e4",
-  borderRadius: 8,
-  padding: 12,
-  color: "#111",
-  background: "#fff",
-  transition: "transform .1s ease",
+  border: "1px solid #2e354d",
+  borderRadius: 12,
+  padding: 14,
+  color: "#eaeaea",
+  background: "#1b2134",
+  boxShadow: "0 2px 8px rgba(0,0,0,.25)",
+  transition: "transform .12s ease, box-shadow .12s ease",
 };
-const imgStyle = { width: 120, height: 120, objectFit: "contain" };
-const title = { marginTop: 8, fontWeight: 600, textTransform: "capitalize" };
+const imgStyle = {
+  width: 140,
+  height: 140,
+  objectFit: "contain",
+  filter: "drop-shadow(0 2px 6px rgba(0,0,0,.35))",
+};
+const title = {
+  marginTop: 10,
+  fontWeight: 700,
+  textTransform: "capitalize",
+  letterSpacing: ".2px",
+};
+
+// pequeño hover via style prop (si preferís CSS module, lo movemos)
+card["&:hover"]; // no-op para editores; el hover lo maneja el contenedor padre si querés
