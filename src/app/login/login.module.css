@@ -1,53 +1,26 @@
-.container {
-  max-width: 400px;
-  margin: 60px auto;
-  padding: 24px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  text-align: center;
-  background: #fff;
-}
+.authContainer { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+.authCard { width: 100%; max-width: 420px; background: #111928; color: #e5e7eb; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
 
-.title {
-  font-size: 1.8rem;
-  color: #2a75bb;
-  margin-bottom: 8px;
-}
+.switcher { display: flex; position: relative; background: #0b1220; border-radius: 12px; padding: 6px; gap: 6px; }
+.switcherBtn { flex: 1; border: none; background: transparent; color: #9ca3af; padding: 10px 12px; cursor: pointer; border-radius: 8px; font-weight: 600; }
+.switcherBtn.active { color: #fff; }
+.switcherIndicator { position: absolute; top: 6px; left: 6px; width: calc(50% - 6px); height: calc(100% - 12px); background: #1f2937; border-radius: 8px; transition: transform .25s ease; }
+.switcherIndicator.right { transform: translateX(100%); }
 
-.subtitle {
-  font-size: 1rem;
-  opacity: 0.8;
-  margin-bottom: 16px;
-}
+.header { margin: 18px 0 10px; }
+.title { margin: 0 0 4px; font-size: 22px; }
+.subtitle { margin: 0; color: #9ca3af; font-size: 14px; }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 12px;
-}
+.error { background: #3b0a0a; color: #fecaca; padding: 8px 10px; border-radius: 8px; font-size: 14px; }
 
-.input {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-}
+.form { display: grid; gap: 14px; margin-top: 12px; }
+.group { display: grid; gap: 6px; }
+.label { font-size: 13px; color: #cbd5e1; }
+.input { border: 1px solid #334155; background: #0b1220; color: #e5e7eb; padding: 10px 12px; border-radius: 10px; outline: none; }
+.input:focus { border-color: #2563eb; }
 
-.button {
-  padding: 10px;
-  background: #2a75bb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
+.submit { margin-top: 8px; border: none; background: #2563eb; color: white; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-weight: 700; }
+.submit:hover { filter: brightness(1.06); }
 
-.button:hover {
-  background: #1e4e87;
-}
-
-.error {
-  color: #e74c3c;
-  font-size: 0.9rem;
-}
+.signup { margin: 10px 0 0; text-align: center; color: #9ca3af; }
+.link { background: none; border: none; color: #93c5fd; cursor: pointer; font-weight: 600; }

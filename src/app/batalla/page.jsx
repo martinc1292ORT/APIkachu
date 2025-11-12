@@ -1,144 +1,188 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { api } from "@/lib/api";
-import { useRequireUser } from "@/lib/session";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./batalla.module.css";
+import { simulateBattle } from "@/lib/battle";
+import { useAuth } from "@/contexts/AuthProvider";
+
+const TEAM_SIZE = 6; // define aquí qué significa "equipo completo"
 
 export default function BatallaPage() {
-  useRequireUser();
+  const router = useRouter();
+  const { user, isAuthenticated, addPoints } = useAuth();
 
-  const [me, setMe] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [difficulty, setDifficulty] = useState("easy");
-  const [result, setResult] = useState(null);
-  const [battling, setBattling] = useState(false);
 
-  // Cargar usuario y team
+  // Si no está autenticado, redirigimos a /login con next param para volver luego.
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const data = await api.me();
-        if (mounted) setMe(data.user);
-      } catch {
-        if (mounted) setError("No se pudo conectar al backend.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
+    if (isAuthenticated === false) {
+      router.replace(`/login?next=/batalla`);
+    }
+  }, [isAuthenticated, router]);
 
-  // Simulación de batalla local (aleatoria)
-  const simulateBattle = () => {
-    if (!me?.team?.length) {
-      setError("Tu equipo está vacío. Armá uno desde tu perfil.");
+  // Mientras resolvemos auth (undefined) o redirigimos, no mostramos nada para evitar flicker
+  if (isAuthenticated === false) return null;
+
+  const myTeam = useMemo(() => user?.team ?? [], [user?.team]);
+  const hasFullTeam = myTeam.length === TEAM_SIZE;
+
+  async function onFight() {
+    setError("");
+    setReport(null);
+
+    if (!hasFullTeam) {
+      setError(`No podés pelear: tu equipo debe tener ${TEAM_SIZE} pokémon.`);
       return;
     }
 
-    setBattling(true);
-    setError("");
-    setResult(null);
+    setLoading(true);
+    try {
+      // Simulamos SIEMPRE con el equipo del usuario (ya autenticado y validado)
+      const result = await simulateBattle(myTeam);
 
-    setTimeout(async () => {
-      try {
-        // Lógica básica: probabilidad depende de la dificultad
-        const odds = { easy: 0.8, medium: 0.5, hard: 0.25 };
-        const win = Math.random() < odds[difficulty];
-        const energyLoss = 1;
+      setReport({ ...result, myTeam });
 
-        const newStats = {
-          wins: me.wins + (win ? 1 : 0),
-          losses: me.losses + (win ? 0 : 1),
-        };
-
-        // Restar energía localmente
-        const updatedTeam = me.team.map((p) => ({
-          ...p,
-          energy: Math.max(0, (p.energy ?? 3) - energyLoss),
-        }));
-
-        const updatedUser = { ...me, ...newStats, team: updatedTeam };
-
-        // Simular llamada al backend
-        try {
-          await api.battle(difficulty);
-        } catch {
-          // si el backend no existe todavía, ignoramos
-        }
-
-        setMe(updatedUser);
-        setResult(win ? "Ganaste 🎉" : "Perdiste 😓");
-      } catch {
-        setError("Error en la simulación de batalla");
-      } finally {
-        setBattling(false);
+      // Sumamos puntos al PERFIL del usuario (no a cada pokémon)
+      if (isAuthenticated && Number(result.awardedPoints) > 0) {
+        addPoints(result.awardedPoints); // esto debe actualizar user.points en tu AuthProvider
       }
-    }, 1000);
-  };
+    } catch (e) {
+      setError(e?.message || "Error en la simulación");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <main className={styles.container}>
-      <h1 className={styles.title}>⚔️ Batalla</h1>
+    <div className={styles.wrap}>
+      <div className={styles.card}>
+        <h1>Batalla</h1>
 
-      {loading ? (
-        <p>Cargando datos...</p>
-      ) : error ? (
-        <div className={styles.error}>{error}</div>
-      ) : (
-        <>
-          <section className={styles.info}>
-            <p><b>Entrenador:</b> {me.name}</p>
-            <p><b>Victorias:</b> {me.wins}</p>
-            <p><b>Derrotas:</b> {me.losses}</p>
-          </section>
+        <p>
+          Peleás contra 6 pokémon aleatorios. Ganás puntos si estás logueado:
+          <strong> +3</strong> por victoria, <strong>+1</strong> por empate.
+        </p>
 
-          <section className={styles.team}>
-            <h2>Tu equipo</h2>
-            {me.team?.length ? (
-              <ul className={styles.grid}>
-                {me.team.map((p) => (
-                  <li key={p.id} className={styles.card}>
-                    <div className={styles.pokeName}>{p.species}</div>
-                    <p>Etapa {p.stage}</p>
-                    <p>Energía: {p.energy ?? 3}</p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No tenés un equipo seleccionado.</p>
-            )}
-          </section>
+        {/* Estado de bloqueo por equipo incompleto */}
+        {!hasFullTeam && (
+          <div className={styles.warning}>
+            No podés acceder a la batalla porque no tenés el equipo completo
+            ({myTeam.length}/{TEAM_SIZE}). Completalo en tu perfil antes de pelear.
+          </div>
+        )}
 
-          <section className={styles.controls}>
-            <h2>Dificultad</h2>
-            <div className={styles.difficulty}>
-              {["easy", "medium", "hard"].map((lvl) => (
-                <button
-                  key={lvl}
-                  className={`${styles.diffBtn} ${difficulty === lvl ? styles.active : ""}`}
-                  onClick={() => setDifficulty(lvl)}
-                  disabled={battling}
-                >
-                  {lvl === "easy" ? "Fácil" : lvl === "medium" ? "Media" : "Difícil"}
-                </button>
-              ))}
+        <div className={styles.actions}>
+          <button
+            className={styles.btn}
+            onClick={onFight}
+            disabled={loading || !hasFullTeam}
+            aria-disabled={loading || !hasFullTeam}
+            title={
+              !hasFullTeam
+                ? `Necesitás ${TEAM_SIZE} pokémon en tu equipo`
+                : undefined
+            }
+          >
+            {loading ? "Simulando..." : "Luchar ahora"}
+          </button>
+        </div>
+
+        {error && <p className={styles.error}>{error}</p>}
+
+        {report && (
+          <>
+            <h2>Resultado: {labelResult(report.result)}</h2>
+            <p>
+              Rounds ganados: <strong>{report.myWins}</strong> vs{" "}
+              <strong>{report.oppWins}</strong>
+              {isAuthenticated && (
+                <>
+                  {" "}
+                  — Puntos otorgados: <strong>{report.awardedPoints}</strong>
+                </>
+              )}
+            </p>
+
+            <div className={styles.teams}>
+              <div>
+                <h3>Mi equipo</h3>
+                <div className={styles.grid}>
+                  {report.myTeam.map((p) => (
+                    <PokeCard key={`me-${p.id}`} p={p} />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3>Rival</h3>
+                <div className={styles.grid}>
+                  {report.opponentTeam.map((p) => (
+                    <PokeCard key={`opp-${p.id}`} p={p} />
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <button
-              onClick={simulateBattle}
-              disabled={battling}
-              className={styles.startBtn}
-            >
-              {battling ? "Combatiendo..." : "Iniciar batalla"}
-            </button>
+            <h3>Rounds</h3>
+            <div className={styles.rounds}>
+              {report.rounds.map((r) => (
+                <div key={r.index} className={styles.round}>
+                  <div className={styles.side}>
+                    <img src={r.me.sprite} alt={r.me.name} width={56} height={56} />
+                    <div className={styles.name}>{r.me.name}</div>
+                    <div className={styles.score}>{r.myScore}</div>
+                  </div>
+                  <div className={styles.vs}>vs</div>
+                  <div className={styles.side}>
+                    <img src={r.opp.sprite} alt={r.opp.name} width={56} height={56} />
+                    <div className={styles.name}>{r.opp.name}</div>
+                    <div className={styles.score}>{r.oppScore}</div>
+                  </div>
+                  <div
+                    className={`${styles.result} ${
+                      r.winner === "me"
+                        ? styles.win
+                        : r.winner === "opp"
+                        ? styles.lose
+                        : styles.draw
+                    }`}
+                  >
+                    {r.winner === "me"
+                      ? "Ganado"
+                      : r.winner === "opp"
+                      ? "Perdido"
+                      : "Empate"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
-            {result && <div className={styles.result}>{result}</div>}
-          </section>
-        </>
-      )}
-    </main>
+function labelResult(res) {
+  if (res === "win") return "¡Victoria!";
+  if (res === "lose") return "Derrota";
+  return "Empate";
+}
+
+function PokeCard({ p }) {
+  return (
+    <div className={styles.poke}>
+      <img src={p.sprite} alt={p.name} width={72} height={72} />
+      <div className={styles.pname}>{p.name}</div>
+      <div className={styles.ptypes}>
+        {(p.types || []).map((t) => (
+          <span key={t} className={styles.type}>
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
