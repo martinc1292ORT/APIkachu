@@ -1,138 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { getUser } from "@/lib/session";
-import { useRequireUser } from "@/lib/session";
+import { useAuth } from "@/contexts/AuthProvider";
+import RequireAuth from "@/components/RequireAuth";
 import styles from "./perfil.module.css";
 
 export default function PerfilPage() {
-  useRequireUser();
-
-  const [me, setMe] = useState(null);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [team, setTeam] = useState([]); // array de IDs seleccionados
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const data = await api.me();
-        if (mounted) {
-          setMe(data.user || null);
-          setTeam(data.user?.teamIds || []);
-        }
-      } catch (e) {
-        if (mounted) setError("No pude conectar con el backend.");
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
-
-  const toggleTeamMember = (pokeId) => {
-    const next = team.includes(pokeId)
-      ? team.filter((id) => id !== pokeId)
-      : team.length < 6
-      ? [...team, pokeId]
-      : team; // no más de 6
-    setTeam(next);
-  };
-
-  const saveTeam = async () => {
-    setSaving(true);
-    setError("");
-    try {
-      await api.setTeam(team);
-      const data = await api.me();
-      setMe(data.user);
-    } catch (e) {
-      setError("Error al guardar el equipo");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const localUser = getUser();
+  const { user, logout, updateProfile } = useAuth();
 
   return (
-    <main className={styles.container}>
-      <h1 className={styles.title}>Perfil del entrenador</h1>
+    <RequireAuth>
+      <div className={styles.wrap}>
+        <div className={styles.card}>
+          <div className={styles.header}>
+            <h1>Mi Perfil</h1>
 
-      {error && <div className={styles.error}>{error}</div>}
+            {/* Puntaje del ENTRENADOR */}
+            <div className={styles.pointsBadge} title="Puntos del entrenador">
+              <span className={styles.pointsLabel}>Puntos</span>
+              <span className={styles.pointsValue}>{user?.points ?? 0}</span>
+            </div>
 
-      {!me ? (
-        <p>Cargando datos...</p>
-      ) : (
-        <>
-          <section className={styles.info}>
-            <p><b>Nombre:</b> {me.name || localUser?.name}</p>
-            <p><b>Puntos:</b> {me.points ?? 0}</p>
-            <p><b>Victorias:</b> {me.wins ?? 0}</p>
-            <p><b>Derrotas:</b> {me.losses ?? 0}</p>
-          </section>
+            <button className={styles.logout} onClick={logout}>Cerrar sesión</button>
+          </div>
 
-          <section className={styles.team}>
-            <h2>Tu equipo (máx. 6)</h2>
-            {team.length === 0 && <p>No elegiste ningún Pokémon aún.</p>}
-            <ul className={styles.teamGrid}>
-              {me.owned?.filter((p) => team.includes(p.id)).map((p) => (
-                <li key={p.id} className={styles.card}>
-                  <div className={styles.pokeName}>{p.species}</div>
-                  <p>Etapa {p.stage}</p>
-                  <p>Energía {p.energy ?? 3}</p>
-                  <button
-                    onClick={() => toggleTeamMember(p.id)}
-                    className={styles.removeBtn}
-                  >
-                    Quitar
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <div className={styles.info}>
+            <div><strong>Email:</strong> {user?.email}</div>
+            <div className={styles.row}>
+              <label htmlFor="nombre">Nombre:</label>
+              <input
+                id="nombre"
+                className={styles.input}
+                defaultValue={user?.name || ""}
+                onBlur={(e) => updateProfile({ name: e.target.value })}
+                placeholder="Tu nombre"
+              />
+            </div>
+          </div>
 
-          <section className={styles.collection}>
-            <h2>Colección</h2>
-            {me.owned?.length === 0 ? (
-              <p>No tenés Pokémon todavía. Comprá un sobre.</p>
-            ) : (
-              <ul className={styles.grid}>
-                {me.owned.map((p) => {
-                  const selected = team.includes(p.id);
-                  return (
-                    <li
-                      key={p.id}
-                      className={`${styles.card} ${selected ? styles.active : ""}`}
-                    >
-                      <div className={styles.pokeName}>{p.species}</div>
-                      <p>Etapa {p.stage}</p>
-                      <p>Copias {p.copies}</p>
-                      <button
-                        onClick={() => toggleTeamMember(p.id)}
-                        className={styles.addBtn}
-                        disabled={
-                          !selected && team.length >= 6
-                        }
-                      >
-                        {selected ? "Quitar" : "Agregar"}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+          <h2>Mi Equipo (6)</h2>
+          <div className={styles.team}>
+            {user?.team?.map((p) => (
+              <div className={styles.poke} key={p.id}>
+                <img src={p.sprite} alt={p.name} width={72} height={72} />
+                <div className={styles.pname}>{p.name}</div>
 
-          <button
-            onClick={saveTeam}
-            disabled={saving}
-            className={styles.saveBtn}
-          >
-            {saving ? "Guardando..." : "Guardar equipo"}
-          </button>
-        </>
-      )}
-    </main>
+                {/* TIPOS (sin puntos aquí) */}
+                <div className={styles.ptypes}>
+                  {p.types.map((t) => (
+                    <span key={t} className={styles.type}>{t}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Opcional: link a tienda para comprar con puntos */}
+          {/* <div className={styles.actions}>
+            <a className={styles.btn} href="/tienda">Ir a la tienda</a>
+          </div> */}
+        </div>
+      </div>
+    </RequireAuth>
   );
 }

@@ -1,3 +1,109 @@
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
-main { max-width: 1100px; margin: 0 auto; }
+/* ====== Estilos globales APIkachu ====== */
+
+/* Reset base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fondo global */
+html,
+body {
+  height: 100%;
+  width: 100%;
+  font-family: "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
+  color: #e9ecf1;
+  background: radial-gradient(1200px 800px at 80% -10%, rgba(255, 215, 0, 0.25), transparent 60%),
+              radial-gradient(1000px 600px at -10% 20%, rgba(42, 117, 187, 0.25), transparent 55%),
+              linear-gradient(180deg, #0e1220 0%, #0a0d18 100%);
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Texto general */
+body {
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+/* Titulares */
+h1, h2, h3, h4, h5 {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+}
+
+/* Enlaces */
+a {
+  color: #ffcb05;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+a:hover {
+  opacity: 0.8;
+}
+
+/* Botones */
+button {
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+button:hover {
+  transform: translateY(-1px);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+input, select {
+  font-family: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Scrollbar minimalista */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Contenedores principales */
+main {
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* Animación sutil de fondo (opcional, liviana) */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

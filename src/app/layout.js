@@ -1,17 +1,20 @@
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthProvider";
 import NavBar from "@/components/NavBar";
 
 export const metadata = {
   title: "APIkachu",
-  description: "Front cliente para el TP2 + APIkachu",
+  description: "PokeApp demo sin backend",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <NavBar />
-        <main style={{ padding: "16px" }}>{children}</main>
+        <AuthProvider>
+          <NavBar />
+          <main>{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );
