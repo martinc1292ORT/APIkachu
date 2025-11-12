@@ -15,7 +15,9 @@ export function AuthProvider({ children }) {
 
   const [user, setUser] = useState(null); // {email, name, team, roster, points}
 
-  // ------- Utils de storage -------
+  // -----------------------------------------
+  // Utils de storage
+  // -----------------------------------------
   function getUsers() {
     return JSON.parse(localStorage.getItem(LS_USERS_KEY) || "[]");
   }
@@ -41,7 +43,14 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(LS_SESSION_KEY);
   }
 
-  // ------- Cargar sesión / migración -------
+  // Helper: asegurar que cada pokémon tenga .url (necesario para PokemonCard)
+  const ensureUrl = (p) =>
+    p?.url ? p : (p?.id ? { ...p, url: `https://pokeapi.co/api/v2/pokemon/${p.id}/` } : p);
+
+  // -----------------------------------------
+  // Cargar sesión / migración
+  // - Aseguramos: roster, points y url en roster/team
+  // -----------------------------------------
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_SESSION_KEY);
@@ -51,8 +60,9 @@ export function AuthProvider({ children }) {
       const u = users.find((x) => x.email === email);
       if (!u) return;
 
-      // Migración suave: asegurar roster y points
       let changed = false;
+
+      // Migración suave: asegurar roster y points
       if (!u.roster) {
         u.roster = Array.isArray(u.team) ? u.team : [];
         changed = true;
@@ -61,6 +71,24 @@ export function AuthProvider({ children }) {
         u.points = 0;
         changed = true;
       }
+
+      // NUEVO: completar .url faltante en roster y team antiguos
+      if (Array.isArray(u.roster)) {
+        const fixed = u.roster.map(ensureUrl);
+        if (JSON.stringify(fixed) !== JSON.stringify(u.roster)) {
+          u.roster = fixed;
+          changed = true;
+        }
+      }
+      if (Array.isArray(u.team)) {
+        const fixedT = u.team.map(ensureUrl);
+        if (JSON.stringify(fixedT) !== JSON.stringify(u.team)) {
+          u.team = fixedT;
+          changed = true;
+        }
+      }
+
+      // Guardar si migramos algo
       if (changed) {
         const idx = findUserIndex(users, email);
         if (idx >= 0) {
@@ -81,7 +109,9 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // ------- Hash demo (no seguro) -------
+  // -----------------------------------------
+  // Hash demo (NO seguro para producción)
+  // -----------------------------------------
   async function hash(text) {
     const enc = new TextEncoder().encode(text);
     const buf = await crypto.subtle.digest("SHA-256", enc);
@@ -89,7 +119,10 @@ export function AuthProvider({ children }) {
     return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  // ------- Poke helpers -------
+  // -----------------------------------------
+  // Poke helpers
+  // - Starter team ahora guarda también .url
+  // -----------------------------------------
   async function getStarterTeam() {
     const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
     const data = await res.json();
@@ -112,19 +145,24 @@ export function AuthProvider({ children }) {
           sprite: d.sprites?.front_default || "",
           types: d.types?.map((t) => t.type.name) || [],
           stats: d.stats?.map((s) => ({ name: s.stat.name, base_stat: s.base_stat })) || [],
+          url: `https://pokeapi.co/api/v2/pokemon/${d.id}/`, // ← clave para PokemonCard
         };
       })
     );
     return detailed;
   }
 
-  // ------- Auth API -------
+  // -----------------------------------------
+  // Auth API
+  // -----------------------------------------
   async function register({ email, password, name }) {
     const users = getUsers();
     if (users.some((u) => u.email === email)) {
       throw new Error("Ya existe un usuario con ese email.");
     }
     const passwordHash = await hash(password);
+
+    // team y roster iniciales (ambos con .url)
     const team = await getStarterTeam();
     const newUser = {
       email,
@@ -134,6 +172,7 @@ export function AuthProvider({ children }) {
       roster: team, // al inicio, roster = team
       points: 0,
     };
+
     users.push(newUser);
     saveUsers(users);
     startSession(email);
@@ -148,9 +187,14 @@ export function AuthProvider({ children }) {
     const passwordHash = await hash(password);
     if (u.passwordHash !== passwordHash) throw new Error("Contraseña incorrecta.");
 
-    // migration por si acaso
+    // Migraciones mínimas al iniciar sesión
     if (!u.roster) u.roster = u.team || [];
     if (typeof u.points !== "number") u.points = 0;
+
+    // Completar .url por compatibilidad con PokemonCard
+    u.roster = Array.isArray(u.roster) ? u.roster.map(ensureUrl) : [];
+    u.team   = Array.isArray(u.team)   ? u.team.map(ensureUrl)   : [];
+
     saveUsers(users);
 
     startSession(email);
@@ -178,7 +222,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ------- Economía / Equipo -------
+  // -----------------------------------------
+  // Economía / Equipo
+  // -----------------------------------------
   function addPoints(delta) {
     if (!user) return;
     const updated = persistUserByEmail(user.email, (u) => ({
@@ -203,21 +249,31 @@ export function AuthProvider({ children }) {
     }
   }
 
-  function addToRoster(poke) {
-    if (!user) throw new Error("No hay usuario activo");
-    const updated = persistUserByEmail(user.email, (u) => {
-      const roster = Array.isArray(u.roster) ? u.roster : [];
-      const exists = roster.some((x) => x.id === poke.id);
-      return exists ? u : { ...u, roster: [...roster, poke] };
-    });
-    if (updated) {
-      setUser((prev) => {
-        const exists = (prev?.roster || []).some((x) => x.id === poke.id);
-        return exists ? prev : { ...prev, roster: [...(prev?.roster || []), poke] };
-      });
-    }
-  }
+  // NUEVO: normalizamos lo que se guarda en roster y garantizamos .url
+function addToRoster(poke) {
+  if (!user) throw new Error("No hay usuario activo");
 
+  const normalized = {
+    id: poke.id,
+    name: poke.name,
+    sprite: poke.sprite ?? "",
+    types: Array.isArray(poke.types) ? poke.types : [],
+    url: poke.url ?? (poke.id ? `https://pokeapi.co/api/v2/pokemon/${poke.id}/` : undefined),
+  };
+
+  // Siempre pusheamos (permitir duplicados). Si luego querés colección única, lo cambiamos.
+  const updated = persistUserByEmail(user.email, (u) => {
+    const roster = Array.isArray(u.roster) ? u.roster : [];
+    return { ...u, roster: [...roster, normalized] };
+  });
+
+  if (updated) {
+    setUser((prev) => ({ ...prev, roster: [...(prev?.roster || []), normalized] }));
+  }
+}
+
+
+  // Reemplaza en el team por ID (busca el objeto en roster y lo pone en el slot)
   function replaceInTeam(slotIndex, pokeId) {
     if (!user) throw new Error("No hay usuario activo");
     const idxSlot = Number(slotIndex);
@@ -228,7 +284,7 @@ export function AuthProvider({ children }) {
       const team = Array.isArray(u.team) ? [...u.team] : Array(TEAM_SIZE).fill(null);
       const poke = roster.find((r) => r.id === pokeId);
       if (!poke) throw new Error("Pokémon no está en tu colección");
-      team[idxSlot] = poke;
+      team[idxSlot] = poke; // guardamos el objeto (con url) para que las Cards funcionen
       return { ...u, team };
     });
 
