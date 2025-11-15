@@ -1,159 +1,195 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getPokemonTypes, getPokemonByType } from "@/lib/pokeapi";
+import PokemonCard from "@/components/PokemonCard";
+import {
+  getPokemonList,
+  getPokemonTypes,
+  getPokemonByType,
+} from "@/lib/pokeapi";
 import styles from "./pokedex.module.css";
 
 export default function PokedexPage() {
   const [types, setTypes] = useState([]);
-  const [selected, setSelected] = useState(new Set());
-  const [results, setResults] = useState([]);
-  const [loadingTypes, setLoadingTypes] = useState(true);
-  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState([]); // array de nombres de tipo
+  const [search, setSearch] = useState("");
+  const [list, setList] = useState([]); // [{name, url}]
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Cargar tipos al iniciar
+  // paginación mínima (solo cuando no hay tipo seleccionado)
+  const [limit, setLimit] = useState(100);
+  const [offset, setOffset] = useState(0);
+
+  // Cargar tipos al montar
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
     (async () => {
       try {
-        setLoadingTypes(true);
-        const t = await getPokemonTypes(); // [{ name: 'fire' }, ...]
-        if (isMounted) setTypes(t);
+        const t = await getPokemonTypes();
+        if (mounted) setTypes(t);
       } catch (e) {
-        if (isMounted) setError("Error cargando tipos");
-      } finally {
-        if (isMounted) setLoadingTypes(false);
+        console.error(e);
       }
     })();
-    return () => { isMounted = false; };
+    return () => { mounted = false; };
   }, []);
 
-  const toggleType = (typeName) => {
-    const next = new Set(selected);
-    if (next.has(typeName)) next.delete(typeName);
-    else next.add(typeName);
-    setSelected(next);
-  };
-
-  const clearSelection = () => {
-    setSelected(new Set());
-    setResults([]);
+  // Cargar lista según los tipos seleccionados
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
     setError("");
-  };
+    (async () => {
+      try {
+        let results = [];
 
-  const handleSearch = async () => {
-    if (selected.size === 0) {
-      setResults([]);
+        if (selectedTypes.length === 0) {
+          // sin filtro: lista general con paginación
+          const json = await getPokemonList(limit, offset);
+          results = json.results;
+        } else if (selectedTypes.length === 1) {
+          // un tipo: traemos todos de ese tipo
+          results = await getPokemonByType(selectedTypes[0]);
+        } else if (selectedTypes.length === 2) {
+          // dos tipos: intersección entre ambos
+          const [listA, listB] = await Promise.all([
+            getPokemonByType(selectedTypes[0]),
+            getPokemonByType(selectedTypes[1]),
+          ]);
+          const namesA = new Set(listA.map((p) => p.name));
+          results = listB.filter((p) => namesA.has(p.name)); // solo los que estén en ambos
+        }
+
+        if (mounted) setList(results);
+      } catch (e) {
+        console.error(e);
+        if (mounted) setError(e.message || "Error al cargar");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedTypes, limit, offset]);
+
+  // Filtrado por búsqueda (dentro de la lista actual)
+  const filtered = useMemo(() => {
+    if (!search) return list;
+    return list.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+  }, [list, search]);
+
+  function handleToggleType(typeName) {
+    // Si ya está seleccionado → lo quitamos
+    if (selectedTypes.includes(typeName)) {
+      setSelectedTypes(selectedTypes.filter((t) => t !== typeName));
       return;
     }
-    setLoadingSearch(true);
-    setError("");
-    try {
-      // Unión (match ANY): juntamos todos, sin duplicados
-      const all = [];
-      for (const typeName of selected) {
-        const list = await getPokemonByType(typeName); // [{name, url}, ...]
-        all.push(...list.map(p => p.name));
-      }
-      // quitar duplicados y ordenar
-      const unique = Array.from(new Set(all)).sort((a, b) => a.localeCompare(b));
-      setResults(unique);
-    } catch (e) {
-      setError("Error buscando pokémon por tipo");
-    } finally {
-      setLoadingSearch(false);
+
+    // Si hay menos de 2 → agregamos
+    if (selectedTypes.length < 2) {
+      setSelectedTypes([...selectedTypes, typeName]);
+    } else {
+      alert("Solo puedes seleccionar hasta dos tipos a la vez");
     }
-  };
+
+    setOffset(0);
+    setSearch("");
+    window?.scrollTo?.({ top: 0, behavior: "smooth" });
+  }
+
+  function handleClearTypes() {
+    setSelectedTypes([]);
+  }
 
   return (
-    <main className={styles.container}>
+    <section className={styles.container}>
       <h1 className={styles.title}>Pokédex</h1>
 
-      {/* Filtros por tipo */}
-      <section className={styles.filters}>
-        <h2 className={styles.subtitle}>Filtrar por tipo</h2>
+      {/* Barra de búsqueda */}
+      <div className={styles.row}>
+        <input
+          type="text"
+          className={styles.searchInput}
+          placeholder={
+            selectedTypes.length
+              ? `Buscar en ${selectedTypes.join(" + ")}…`
+              : "Buscar en la página actual…"
+          }
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <span className={styles.hint}>
+          {selectedTypes.length === 0
+            ? "Sin filtro de tipo"
+            : `Filtrando por: ${selectedTypes.join(" + ")}`}
+        </span>
+      </div>
 
-        {loadingTypes ? (
-          <div className={styles.helperText}>Cargando tipos…</div>
-        ) : (
-          <div className={styles.typeGrid}>
-            {types.map((t) => {
-              const isActive = selected.has(t.name);
-              return (
-                <button
-                  key={t.name}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => toggleType(t.name)}
-                  className={`${styles.typeBtn} ${isActive ? styles.typeBtnActive : ""}`}
-                >
-                  {t.name}
-                </button>
-              );
-            })}
-          </div>
-        )}
+      {/* Botonera de tipos */}
+      <div className={styles.typesWrap}>
+        <button
+          onClick={handleClearTypes}
+          className={`${styles.typeBtn} ${selectedTypes.length === 0 ? styles.active : ""}`}
+        >
+          Todos
+        </button>
 
-        <div className={styles.actions}>
-          <span className={styles.helperText}>
-            {selected.size > 0
-              ? `Seleccionados: ${selected.size}`
-              : "Elegí uno o más tipos"}
-          </span>
+        {types.map((t) => {
+          const isActive = selectedTypes.includes(t.name);
+          const disabled = !isActive && selectedTypes.length >= 2;
+          const typeClass = isActive ? styles["type--" + t.name] : ""; // <-- color solo activo
 
-          <div className={styles.actionsRight}>
+          return (
             <button
-              type="button"
-              onClick={clearSelection}
-              className={styles.secondaryBtn}
-              disabled={selected.size === 0 && results.length === 0}
+              key={t.name}
+              onClick={() => handleToggleType(t.name)}
+              aria-pressed={isActive}
+              disabled={disabled}
+              className={`${styles.typeBtn} ${typeClass} ${isActive ? styles.active : ""}`}
             >
-              Limpiar
+              <span className={styles.typeName}>{t.name}</span>
             </button>
-            <button
-              type="button"
-              onClick={handleSearch}
-              className={styles.primaryBtn}
-              disabled={selected.size === 0 || loadingSearch}
-            >
-              {loadingSearch ? "Buscando…" : "Buscar"}
-            </button>
-          </div>
+          );
+        })}
+      </div>
+
+
+      {/* Paginación solo cuando NO hay tipo seleccionado */}
+      {selectedTypes.length === 0 && (
+        <div className={styles.row}>
+          <button
+            className={styles.pagerBtn}
+            onClick={() => setOffset(Math.max(0, offset - limit))}
+            disabled={offset === 0}
+          >
+            ← Anterior
+          </button>
+          <span className={styles.meta}>offset: {offset}</span>
+          <button
+            className={styles.pagerBtn}
+            onClick={() => setOffset(offset + limit)}
+          >
+            Siguiente →
+          </button>
         </div>
-      </section>
+      )}
 
-      {/* Resultados */}
-      <section className={styles.results}>
-        <h2 className={styles.subtitle}>Resultados</h2>
+      {/* Estado de carga / error */}
+      {loading && <p className={styles.loading}>Cargando…</p>}
+      {error && <p className={styles.error}>Error: {error}</p>}
 
-        {error && <div className={styles.error}>{error}</div>}
+      {/* Grid */}
+      <div className={styles.grid}>
+        {filtered.map((p) => (
+          <PokemonCard key={p.name} name={p.name} url={p.url} />
+        ))}
+      </div>
 
-        {!error && !loadingSearch && results.length === 0 && selected.size === 0 && (
-          <p className={styles.helperText}>
-            No se listan pokémon de entrada. Elegí tipos y presioná <b>Buscar</b>.
-          </p>
-        )}
-
-        {!error && !loadingSearch && results.length === 0 && selected.size > 0 && (
-          <p className={styles.helperText}>Sin resultados para esa selección.</p>
-        )}
-
-        {!error && loadingSearch && (
-          <p className={styles.helperText}>Cargando resultados…</p>
-        )}
-
-        {!error && results.length > 0 && (
-          <ul className={styles.grid}>
-            {results.map((name) => (
-              <li key={name} className={styles.card}>
-                <Link href={`/pokemon/${name}`}>{name}</Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
+      {/* Link atrás */}
+      <p className={styles.back}>
+        <Link href="/">← Volver al inicio</Link>
+      </p>
+    </section>
   );
 }

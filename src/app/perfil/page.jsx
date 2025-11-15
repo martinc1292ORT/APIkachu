@@ -1,138 +1,241 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { getUser } from "@/lib/session";
-import { useRequireUser } from "@/lib/session";
+import { useState, useMemo } from "react";
+import { useAuth } from "@/contexts/AuthProvider";
+import RequireAuth from "@/components/RequireAuth";
 import styles from "./perfil.module.css";
 
 export default function PerfilPage() {
-  useRequireUser();
+  const { user, logout, updateProfile } = useAuth();
 
-  const [me, setMe] = useState(null);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [team, setTeam] = useState([]); // array de IDs seleccionados
+  // -----------------------------
+  // ⚠️ Normalizamos estructuras
+  // En AuthProvider la "colección" se llama roster (no collection).
+  // -----------------------------
+  const team = user?.team ?? [];
+  const roster = user?.roster ?? []; // ← usar roster
+  const [selectedSlot, setSelectedSlot] = useState(null); // índice del slot a reemplazar
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const data = await api.me();
-        if (mounted) {
-          setMe(data.user || null);
-          setTeam(data.user?.teamIds || []);
-        }
-      } catch (e) {
-        if (mounted) setError("No pude conectar con el backend.");
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
+  const isInTeam = (id) => team.some((p) => p?.id === id);
+  const isInRoster = (id) => roster.some((p) => p?.id === id);
 
-  const toggleTeamMember = (pokeId) => {
-    const next = team.includes(pokeId)
-      ? team.filter((id) => id !== pokeId)
-      : team.length < 6
-      ? [...team, pokeId]
-      : team; // no más de 6
-    setTeam(next);
+  // Utilidad para evitar duplicados por id
+  const uniqueById = (arr) => {
+    const seen = new Set();
+    return (arr || []).filter((x) => {
+      if (!x || x.id == null) return false;
+      if (seen.has(x.id)) return false;
+      seen.add(x.id);
+      return true;
+    });
   };
 
-  const saveTeam = async () => {
-    setSaving(true);
-    setError("");
-    try {
-      await api.setTeam(team);
-      const data = await api.me();
-      setMe(data.user);
-    } catch (e) {
-      setError("Error al guardar el equipo");
-    } finally {
-      setSaving(false);
+  // -----------------------------
+  // Guardar estado en el perfil
+  // ✅ Guardamos siempre { team, roster } porque así lo espera AuthProvider.
+  // -----------------------------
+  const save = (nextTeam, nextRoster) => {
+    updateProfile({
+      team: uniqueById(nextTeam).slice(0, 6),
+      roster: uniqueById(nextRoster),
+    });
+  };
+
+  // Agregar de roster → equipo
+  const handleAddToTeam = (poke) => {
+    if (isInTeam(poke.id)) return;
+    if (team.length >= 6) return;
+    const nextTeam = [...team, poke];
+    const nextRoster = roster.filter((p) => p.id !== poke.id);
+    save(nextTeam, nextRoster);
+  };
+
+  // Quitar del equipo → vuelve a roster
+  const handleRemoveFromTeam = (idx) => {
+    const removed = team[idx];
+    const nextTeam = team.filter((_, i) => i !== idx);
+    const nextRoster = [...roster, removed];
+    save(nextTeam, nextRoster);
+    if (selectedSlot === idx) setSelectedSlot(null);
+  };
+
+  // Inicia flujo de reemplazo eligiendo el slot
+  const beginReplace = (idx) => {
+    setSelectedSlot(idx);
+  };
+
+  // Reemplazar slot seleccionado con un pokémon del roster
+  const handleReplaceWith = (poke) => {
+    if (selectedSlot == null) return;
+    const outgoing = team[selectedSlot];
+    if (isInTeam(poke.id)) return; // ya está en el equipo
+
+    const nextTeam = team.slice();
+    nextTeam[selectedSlot] = poke;
+
+    // sacamos el entrante del roster
+    let nextRoster = roster.filter((p) => p.id !== poke.id);
+
+    // el que salió del equipo vuelve al roster (si existía y no estaba)
+    if (outgoing && !isInRoster(outgoing.id)) {
+      nextRoster = [...nextRoster, outgoing];
     }
+
+    save(nextTeam, nextRoster);
+    setSelectedSlot(null);
   };
 
-  const localUser = getUser();
+  // Cancelar flujo de reemplazo
+  const cancelReplace = () => setSelectedSlot(null);
+
+  const teamCount = team.length;
+  const rosterCount = roster.length;
 
   return (
-    <main className={styles.container}>
-      <h1 className={styles.title}>Perfil del entrenador</h1>
+    <RequireAuth>
+      <div className={styles.wrap}>
+        <div className={styles.card}>
+          <div className={styles.header}>
+            <h1>Mi Perfil</h1>
 
-      {error && <div className={styles.error}>{error}</div>}
+            {/* Puntaje del ENTRENADOR (sale de user.points) */}
+            <div className={styles.pointsBadge} title="Puntos del entrenador">
+              <span className={styles.pointsLabel}>Puntos</span>
+              <span className={styles.pointsValue}>{user?.points ?? 0}</span>
+            </div>
 
-      {!me ? (
-        <p>Cargando datos...</p>
-      ) : (
-        <>
-          <section className={styles.info}>
-            <p><b>Nombre:</b> {me.name || localUser?.name}</p>
-            <p><b>Puntos:</b> {me.points ?? 0}</p>
-            <p><b>Victorias:</b> {me.wins ?? 0}</p>
-            <p><b>Derrotas:</b> {me.losses ?? 0}</p>
-          </section>
+            <button className={styles.logout} onClick={logout}>
+              Cerrar sesión
+            </button>
+          </div>
 
-          <section className={styles.team}>
-            <h2>Tu equipo (máx. 6)</h2>
-            {team.length === 0 && <p>No elegiste ningún Pokémon aún.</p>}
-            <ul className={styles.teamGrid}>
-              {me.owned?.filter((p) => team.includes(p.id)).map((p) => (
-                <li key={p.id} className={styles.card}>
-                  <div className={styles.pokeName}>{p.species}</div>
-                  <p>Etapa {p.stage}</p>
-                  <p>Energía {p.energy ?? 3}</p>
-                  <button
-                    onClick={() => toggleTeamMember(p.id)}
-                    className={styles.removeBtn}
-                  >
-                    Quitar
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <div className={styles.info}>
+            <div><strong>Email:</strong> {user?.email}</div>
+            <div className={styles.row}>
+              <label htmlFor="nombre">Nombre:</label>
+              <input
+                id="nombre"
+                className={styles.input}
+                defaultValue={user?.name || ""}
+                onBlur={(e) => updateProfile({ name: e.target.value })}
+                placeholder="Tu nombre"
+              />
+            </div>
+          </div>
 
-          <section className={styles.collection}>
-            <h2>Colección</h2>
-            {me.owned?.length === 0 ? (
-              <p>No tenés Pokémon todavía. Comprá un sobre.</p>
-            ) : (
-              <ul className={styles.grid}>
-                {me.owned.map((p) => {
-                  const selected = team.includes(p.id);
-                  return (
-                    <li
-                      key={p.id}
-                      className={`${styles.card} ${selected ? styles.active : ""}`}
+          {/* Equipo */}
+          <div className={styles.sectionHeader}>
+            <h2>Mi Equipo ({teamCount}/6)</h2>
+            {selectedSlot != null && (
+              <div className={styles.replaceBanner}>
+                Reemplazando el slot #{selectedSlot + 1} — elegí un pokémon de tu colección o{" "}
+                <button className={styles.linkBtn} onClick={cancelReplace}>cancelá</button>.
+              </div>
+            )}
+          </div>
+
+          <div className={styles.teamGrid}>
+            {Array.from({ length: Math.max(6, teamCount) }).map((_, i) => {
+              const p = team[i];
+              if (!p) {
+                return (
+                  <div key={`slot-${i}`} className={`${styles.poke} ${styles.emptySlot}`}>
+                    <div className={styles.emptyMsg}>Slot vacío</div>
+                  </div>
+                );
+              }
+              return (
+                <div
+                  className={`${styles.poke} ${selectedSlot === i ? styles.activeSlot : ""}`}
+                  key={p.id}
+                >
+                  <img src={p.sprite} alt={p.name} width={72} height={72} />
+                  <div className={styles.pname}>{p.name}</div>
+                  <div className={styles.ptypes}>
+                    {(p.types || []).map((t) => (
+                      <span key={t} className={styles.type}>{t}</span>
+                    ))}
+                  </div>
+                  <div className={styles.pokeActions}>
+                    <button
+                      className={styles.btnGhost}
+                      onClick={() => beginReplace(i)}
+                      title="Reemplazar este slot con un pokémon de tu colección"
                     >
-                      <div className={styles.pokeName}>{p.species}</div>
-                      <p>Etapa {p.stage}</p>
-                      <p>Copias {p.copies}</p>
+                      Cambiar
+                    </button>
+                    <button
+                      className={styles.btnDanger}
+                      onClick={() => handleRemoveFromTeam(i)}
+                      title="Sacar del equipo (vuelve a tu colección)"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Colección (roster) */}
+          <div className={styles.sectionHeader}>
+            <h2>Mi Colección ({rosterCount})</h2>
+          </div>
+
+          <div className={styles.collectionGrid}>
+            {rosterCount === 0 && (
+              <div className={styles.emptyCollection}>No tenés pokémon en tu colección.</div>
+            )}
+            {roster.map((p) => {
+              const disabledAdd = isInTeam(p.id) || teamCount >= 6;
+
+              return (
+                <div className={styles.poke} key={p.id}>
+                  <img src={p.sprite} alt={p.name} width={64} height={64} />
+                  <div className={styles.pname}>{p.name}</div>
+                  <div className={styles.ptypes}>
+                    {(p.types || []).map((t) => (
+                      <span key={t} className={styles.type}>{t}</span>
+                    ))}
+                  </div>
+
+                  <div className={styles.pokeActions}>
+                    {selectedSlot == null ? (
                       <button
-                        onClick={() => toggleTeamMember(p.id)}
-                        className={styles.addBtn}
-                        disabled={
-                          !selected && team.length >= 6
+                        className={styles.btnPrimary}
+                        disabled={disabledAdd}
+                        onClick={() => handleAddToTeam(p)}
+                        title={
+                          isInTeam(p.id)
+                            ? "Ya está en el equipo"
+                            : teamCount >= 6
+                            ? "Tu equipo ya tiene 6 pokémon"
+                            : "Agregar al equipo"
                         }
                       >
-                        {selected ? "Quitar" : "Agregar"}
+                        Agregar al equipo
                       </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+                    ) : (
+                      <button
+                        className={styles.btnPrimary}
+                        onClick={() => handleReplaceWith(p)}
+                        title={`Enviar a slot #${selectedSlot + 1}`}
+                      >
+                        Enviar a slot #{selectedSlot + 1}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-          <button
-            onClick={saveTeam}
-            disabled={saving}
-            className={styles.saveBtn}
-          >
-            {saving ? "Guardando..." : "Guardar equipo"}
-          </button>
-        </>
-      )}
-    </main>
+          {/* Opcional: link a tienda para comprar con puntos */}
+          {/* <div className={styles.actions}>
+            <a className={styles.btn} href="/tienda">Ir a la tienda</a>
+          </div> */}
+        </div>
+      </div>
+    </RequireAuth>
   );
 }

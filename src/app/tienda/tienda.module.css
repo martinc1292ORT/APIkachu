@@ -1,0 +1,143 @@
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.header {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  color: #fff;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.points {
+  padding: 8px 10px;
+  background: #1f2a44;
+  color: #ffcb05;
+  border-radius: 8px;
+}
+
+.search {
+  min-width: 240px;
+  flex: 1 1 260px;
+  padding: 8px 10px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #121826;
+  color: #fff;
+}
+
+.sortLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.select {
+  padding: 8px 10px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #121826;
+  color: #fff;
+}
+
+.linkPokedex {
+  margin-left: auto;
+  text-decoration: none;
+  padding: 8px 10px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #121826;
+  color: #fff;
+  transition: background 0.2s ease;
+}
+
+.linkPokedex:hover {
+  background: #2a75bb;
+  color: #fff;
+}
+
+.status {
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  background: #fffbe7;
+  border: 1px solid #ffec99;
+  border-radius: 8px;
+  color: #000;
+  font-weight: 500;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.cardWrap {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #2e354d;
+  border-radius: 12px;
+  background: #1b2134; /* oscuro, más acorde al fondo */
+  color: #eaeaea;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.cardWrap:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.price {
+  font-size: 14px;
+  color: #ffcb05; /* amarillo poké */
+  font-weight: 600;
+}
+
+.buyBtn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: #2a75bb;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.04s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.buyBtn:hover {
+  background: #3d8cf1;
+  transform: translateY(-1px);
+}
+
+.buyBtn:active {
+  transform: translateY(1px);
+}
+
+.buyBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

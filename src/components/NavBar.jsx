@@ -1,40 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthProvider";
 import styles from "./NavBar.module.css";
 
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/pokedex", label: "Pokedex" },
-  { href: "/sobre", label: "Sobres" },
-  { href: "/batalla", label: "Batalla" },
-  { href: "/perfil", label: "Perfil" },
-  { href: "/login", label: "Login" },
-];
-
 export default function NavBar() {
-  const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className={styles.header}>
-      <div className={styles.inner}>
-        <Link href="/" className={styles.logo}>APIkachu</Link>
-        <nav className={styles.nav}>
-          {links.map((l) => {
-            const active = pathname === l.href;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`${styles.link} ${active ? styles.active : ""}`}
-              >
-                {l.label}
-              </Link>
-            );
-          })}
-        </nav>
+    <nav className={styles.navbar}>
+      <div className={styles.left}>
+        <Link href="/" className={styles.brand}>
+          <span className={styles.logo}>⚡</span> APIkachu
+        </Link>
+
+        <div className={styles.menu}>
+          <Link href="/pokedex" className={styles.link}>
+            Pokédex
+          </Link>
+          <Link href="/batalla" className={styles.link}>
+            Batalla
+          </Link>
+          <Link href="/tienda" className={styles.link}>
+            Tienda
+          </Link>
+        </div>
       </div>
-    </header>
+
+      <div className={styles.right}>
+        {isAuthenticated ? (
+          <>
+            <div className={styles.points}>
+              🪙 {user?.points ?? 0}
+            </div>
+            <Link href="/perfil" className={styles.profileLink}>
+              Perfil
+            </Link>
+            <button onClick={logout} className={styles.logoutBtn}>
+              Cerrar sesión
+            </button>
+          </>
+        ) : (
+          <Link href="/login" className={styles.loginBtn}>
+            Iniciar sesión
+          </Link>
+        )}
+      </div>
+    </nav>
   );
 }

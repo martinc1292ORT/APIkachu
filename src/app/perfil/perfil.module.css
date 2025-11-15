@@ -1,102 +1,279 @@
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #222;
+  --accent: #ffcb05;
+  --accent-dark: #e0b000;
+  --danger: #ef5350;
+  --danger-dark: #c62828;
+  --gray: #e0e0e0;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --radius: 16px;
+
+  /* Alturas reservadas dentro de la card */
+  --img-h: 84px;
+  --chip-h: 22px;              /* alto aprox de cada chip */
+  --types-h: calc(var(--chip-h) * 2 + 8px); /* 2 filas de chips */
 }
 
-.title {
-  font-size: 2rem;
-  margin-bottom: 12px;
-  color: #2a75bb;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1320;
+    --card: #1b2134;
+    --text: #eaeaea;
+    --accent: #ffcb05;
+    --accent-dark: #cba800;
+    --danger: #ef5350;
+    --danger-dark: #b71c1c;
+    --gray: #2a3045;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
 }
 
-.error {
-  color: #e74c3c;
-  margin: 8px 0;
-}
+/* ==== ESTRUCTURA PRINCIPAL ==== */
 
-.info p {
-  margin: 4px 0;
-}
-
-/* ---- Team ---- */
-.team {
-  margin-top: 24px;
-}
-
-.team h2 {
-  margin-bottom: 8px;
-  font-size: 1.2rem;
-  color: #2a75bb;
-}
-
-.teamGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  list-style: none;
-  padding: 0;
-}
-
-/* ---- Collection ---- */
-.collection {
-  margin-top: 24px;
-}
-
-.collection h2 {
-  margin-bottom: 8px;
-  font-size: 1.2rem;
-  color: #2a75bb;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  list-style: none;
-  padding: 0;
+.wrap {
+  min-height: 100vh;
+  background-color: var(--bg);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
 }
 
 .card {
-  border: 1px solid #2a75bb33;
-  border-radius: 12px;
-  padding: 12px;
-  text-align: center;
-  background: #fff;
-  transition: 0.2s border-color;
+  width: 100%;
+  max-width: 1100px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.card.active {
-  border-color: #2a75bb;
+/* ==== HEADER ==== */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.pokeName {
-  text-transform: capitalize;
+.header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ==== BOTÓN LOGOUT ==== */
+.logout {
+  background: var(--danger);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
   font-weight: 600;
-  margin-bottom: 4px;
+  transition: background 0.2s;
 }
+.logout:hover { background: var(--danger-dark); }
 
-.addBtn,
-.removeBtn,
-.saveBtn {
+/* ==== PUNTAJE ==== */
+.pointsBadge {
+  display: flex;
+  align-items: center;
+  background: var(--accent);
+  color: #222;
+  border-radius: 12px;
+  padding: 4px 12px;
+  gap: 8px;
+  font-weight: 700;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.pointsLabel { font-size: 0.9rem; opacity: 0.9; }
+.pointsValue { font-size: 1.2rem; }
+
+/* ==== INFO DEL USUARIO ==== */
+.info {
+  background: var(--gray);
+  padding: 16px;
+  border-radius: 12px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.input {
+  flex: 1;
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid #2a75bb;
-  background: transparent;
-  color: #2a75bb;
-  cursor: pointer;
-  transition: 0.2s background, 0.2s color;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #000;
+}
+@media (prefers-color-scheme: dark) {
+  .input { background: #2a3045; color: #fff; border-color: #444; }
 }
 
-.addBtn:hover,
-.removeBtn:hover,
-.saveBtn:hover {
-  background: #2a75bb;
-  color: #fff;
+/* ==== SECCIONES ==== */
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-
-.saveBtn {
-  margin-top: 24px;
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.replaceBanner {
+  background: var(--accent);
+  color: #222;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-weight: 600;
-  display: block;
+}
+.linkBtn {
+  background: none; border: none; color: #0044aa;
+  font-weight: 600; cursor: pointer; text-decoration: underline;
+}
+
+/* ==== GRIDS ==== */
+/* Equipo: 2 filas de 3 (3 columnas fijas) */
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* ✅ 3 columnas */
+  gap: 20px 24px;
+  justify-items: center;
+  align-items: stretch;
+}
+
+/* Colección: responsivo */
+.collectionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+/* ==== CARD DE POKÉMON ==== */
+/* Usamos grid interno para reservar bloques: imagen, nombre, tipos, botones */
+.poke {
+  background: var(--gray);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px 12px;
+  display: grid;
+  grid-template-rows: var(--img-h) auto var(--types-h) auto; /* 🔸 reserva altura para tipos */
+  gap: 6px;
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  min-height: 260px; /* misma altura para todas */
+  transition: transform 0.2s, background 0.2s;
+}
+.poke:hover { transform: translateY(-3px); }
+
+.poke img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.emptySlot {
+  opacity: 0.5;
+  font-style: italic;
+  place-content: center;
+}
+.activeSlot {
+  border: 2px solid var(--accent);
+  transform: scale(1.02);
+}
+
+.pname {
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+/* Tipos: como chips, 2 filas máximo, sin desbordar */
+.ptypes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  align-content: flex-start;   /* apila de arriba hacia abajo */
+  width: 100%;
+  max-width: 220px;
+  min-height: var(--types-h);  /* reserva espacio fijo */
+  max-height: var(--types-h);  /* evita que empuje la botonera */
+  overflow: hidden;            /* oculta cualquier 3ª fila si existiera */
+  margin: 4px 0 2px 0;
+}
+
+.type {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: var(--chip-h);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+/* ==== BOTONES ==== */
+.pokeActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;   /* siempre queda al pie de la card */
+}
+.btnPrimary,
+.btnGhost,
+.btnDanger {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  width: 100%;
+}
+.btnPrimary { background: var(--accent); color: #222; }
+.btnPrimary:hover { background: var(--accent-dark); }
+.btnGhost { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+.btnGhost:hover { background: var(--accent); color: #222; }
+.btnDanger { background: var(--danger); color: white; }
+.btnDanger:hover { background: var(--danger-dark); }
+.btnPrimary:disabled, .btnGhost:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+
+/* ==== VACÍOS ==== */
+.emptyCollection {
+  text-align: center;
+  font-style: italic;
+  opacity: 0.7;
+  grid-column: 1 / -1;
+}
+
+/* ==== RESPONSIVE ==== */
+@media (max-width: 1000px) {
+  /* Equipo: que se adapte si falta ancho */
+  .teamGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .card { padding: 20px; }
+  .header h1 { font-size: 1.6rem; }
+  .teamGrid { grid-template-columns: 1fr; }
 }
