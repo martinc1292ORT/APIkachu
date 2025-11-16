@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -6,7 +7,8 @@ import styles from "./batalla.module.css";
 import { simulateBattle } from "@/lib/battle";
 import { useAuth } from "@/contexts/AuthProvider";
 
-const TEAM_SIZE = 6; // define aquí qué significa "equipo completo"
+const TEAM_SIZE = 6; //cant max de pokemones por equipo
+const TEAM_MIN_SIZE = 1; //cant min de pokemones por equipo
 
 export default function BatallaPage() {
   const router = useRouter();
@@ -28,26 +30,26 @@ export default function BatallaPage() {
 
   const myTeam = useMemo(() => user?.team ?? [], [user?.team]);
   const hasFullTeam = myTeam.length === TEAM_SIZE;
+  const hasMinimumTeam = myTeam.length >= 1;
+  
 
   async function onFight() {
     setError("");
     setReport(null);
 
-    if (!hasFullTeam) {
-      setError(`No podés pelear: tu equipo debe tener ${TEAM_SIZE} pokémon.`);
+    if (!hasMinimumTeam) {
+      setError(`No podés pelear: tu equipo debe tener al menos ${TEAM_MIN_SIZE} pokémon.`);
       return;
     }
 
     setLoading(true);
     try {
-      // Simulamos SIEMPRE con el equipo del usuario (ya autenticado y validado)
       const result = await simulateBattle(myTeam);
 
       setReport({ ...result, myTeam });
 
-      // Sumamos puntos al PERFIL del usuario (no a cada pokémon)
       if (isAuthenticated && Number(result.awardedPoints) > 0) {
-        addPoints(result.awardedPoints); // esto debe actualizar user.points en tu AuthProvider
+        addPoints(result.awardedPoints); 
       }
     } catch (e) {
       setError(e?.message || "Error en la simulación");
@@ -62,15 +64,15 @@ export default function BatallaPage() {
         <h1>Batalla</h1>
 
         <p>
-          Peleás contra 6 pokémon aleatorios. Ganás puntos si estás logueado:
-          <strong> +3</strong> por victoria, <strong>+1</strong> por empate.
-        </p>
+      Peleás contra <strong>{myTeam.length}</strong> pokémon aleatorios. Ganás puntos si estás logueado:
+      <strong> +3</strong> por victoria, <strong>+1</strong> por empate.
+    </p>
 
-        {/* Estado de bloqueo por equipo incompleto */}
-        {!hasFullTeam && (
+        {/* Estado de bloqueo por equipo insuficiente */}
+        {!hasMinimumTeam && (
           <div className={styles.warning}>
-            No podés acceder a la batalla porque no tenés el equipo completo
-            ({myTeam.length}/{TEAM_SIZE}). Completalo en tu perfil antes de pelear.
+             No podés acceder a la batalla porque tu equipo debe tener al menos 1 pokémon ({myTeam.length}/1).
+        Completalo en tu perfil antes de pelear.
           </div>
         )}
 
@@ -78,11 +80,11 @@ export default function BatallaPage() {
           <button
             className={styles.btn}
             onClick={onFight}
-            disabled={loading || !hasFullTeam}
-            aria-disabled={loading || !hasFullTeam}
+            disabled={loading || !hasMinimumTeam}
+            aria-disabled={loading || !hasMinimumTeam}
             title={
-              !hasFullTeam
-                ? `Necesitás ${TEAM_SIZE} pokémon en tu equipo`
+              !hasMinimumTeam
+                ? `Necesitás al menos ${TEAM_MIN_SIZE} pokémon en tu equipo`
                 : undefined
             }
           >
