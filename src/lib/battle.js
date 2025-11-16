@@ -1,4 +1,4 @@
-// Utilidades de batalla contra 6 pokes aleatorios usando PokeAPI
+// Utilidades de batalla contra  pokes aleatorios usando PokeAPI
 
 export async function fetchRandomTeam(count = 6) {
   const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
@@ -10,7 +10,7 @@ export async function fetchRandomTeam(count = 6) {
     const p = pool[idx];
     if (!picked.some((x) => x.name === p.name)) picked.push(p);
   }
-  // Detalle con stats
+
   const detailed = await Promise.all(
     picked.map(async (p) => {
       const r = await fetch(p.url);
@@ -58,11 +58,11 @@ function powerScore(p) {
 }
 
 export async function ensureDetailedTeam(team) {
-  // Si el team del usuario viene sin stats (del perfil), se completan on-demand
+ 
   return await Promise.all(
     team.map(async (p) => {
       if (p.stats) return p;
-      // Traer detalle por id o nombre
+      
       const url = `https://pokeapi.co/api/v2/pokemon/${p.id || p.name}`;
       const r = await fetch(url);
       const d = await r.json();
@@ -73,15 +73,18 @@ export async function ensureDetailedTeam(team) {
 
 export async function simulateBattle(userTeamIn) {
   const userTeam = await ensureDetailedTeam(userTeamIn);
-  const opponentTeam = await fetchRandomTeam(6);
+  const opponentTeam = await fetchRandomTeam(userTeam.length);
 
   const rounds = [];
   let myWins = 0;
   let oppWins = 0;
 
-  for (let i = 0; i < 6; i++) {
-    const mine = userTeam[i % userTeam.length];
-    const opp = opponentTeam[i];
+  // cantidad de rounds = cantidad de pokémon del usuario
+  const roundsCount = userTeam.length;
+
+  for (let i = 0; i < roundsCount; i++) {
+    const mine = userTeam[i % userTeam.length];  
+    const opp = opponentTeam[i];                 
 
     const myScore = powerScore(mine);
     const oppScore = powerScore(opp);
@@ -97,8 +100,8 @@ export async function simulateBattle(userTeamIn) {
   if (myWins > oppWins) result = "win";
   if (oppWins > myWins) result = "lose";
 
-  // Puntos (ajustá a gusto)
   const awardedPoints = result === "win" ? 3 : result === "draw" ? 1 : 0;
 
   return { opponentTeam, rounds, result, myWins, oppWins, awardedPoints };
+
 }

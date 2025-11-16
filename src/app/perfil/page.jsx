@@ -8,10 +8,7 @@ import styles from "./perfil.module.css";
 export default function PerfilPage() {
   const { user, logout, updateProfile } = useAuth();
 
-  // -----------------------------
-  // ⚠️ Normalizamos estructuras
-  // En AuthProvider la "colección" se llama roster (no collection).
-  // -----------------------------
+ 
   const team = user?.team ?? [];
   const roster = user?.roster ?? []; // ← usar roster
   const [selectedSlot, setSelectedSlot] = useState(null); // índice del slot a reemplazar
@@ -30,10 +27,7 @@ export default function PerfilPage() {
     });
   };
 
-  // -----------------------------
-  // Guardar estado en el perfil
-  // ✅ Guardamos siempre { team, roster } porque así lo espera AuthProvider.
-  // -----------------------------
+
   const save = (nextTeam, nextRoster) => {
     updateProfile({
       team: uniqueById(nextTeam).slice(0, 6),
@@ -124,7 +118,7 @@ export default function PerfilPage() {
           </div>
 
           {/* Equipo */}
-          <div className={styles.sectionHeader}>
+            <div className={styles.sectionHeader}>
             <h2>Mi Equipo ({teamCount}/6)</h2>
             {selectedSlot != null && (
               <div className={styles.replaceBanner}>
