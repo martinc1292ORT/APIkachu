@@ -1,0 +1,26 @@
+.card {
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover {
+  cursor: pointer;
+  transform: scale(1.05);
+}
+
+.img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px black);
+}
+
+.title {
+  margin-top: 8px;
+  font-weight: bold;
+  text-transform: capitalize;
+  color: white;
+}

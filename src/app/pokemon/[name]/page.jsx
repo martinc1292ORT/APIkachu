@@ -7,14 +7,12 @@ export default async function PokemonDetailPage({ params }) {
   const { name } = await params;
   const key = decodeURIComponent(String(name));
   const data = await getPokemon(key);
-
   if (!data) notFound();
 
   const artwork = data.sprites?.other?.["official-artwork"]?.front_default || "";
   const types = data.types?.map((t) => t.type.name) ?? [];
   const stats = data.stats?.map((s) => ({ name: s.stat.name, value: s.base_stat })) ?? [];
 
-  // Mapa de colores base por tipo (para el degradado)
   const typeColors = {
     fire: "#EF5350",
     water: "#42A5F5",
@@ -39,6 +37,32 @@ export default async function PokemonDetailPage({ params }) {
   const bg1 = typeColors[types[0]] || "#3b4cca";
   const bg2 = typeColors[types[1]] || bg1;
   const gradient = `linear-gradient(135deg, ${bg1} 0%, ${bg2} 100%)`;
+
+  async function getEvolutionChain(name) {
+    const speciesRes = await fetch(data.species.url);
+    const speciesData = await speciesRes.json();
+    const evoRes = await fetch(speciesData.evolution_chain.url);
+    const evoData = await evoRes.json();
+
+    const chainList = [];
+    const buildChain = async (node) => {
+      const speciesName = node.species.name;
+      const pokeRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${speciesName}`);
+      const pokeData = await pokeRes.json();
+      chainList.push({
+        name: speciesName,
+        id: pokeData.id,
+        img: pokeData.sprites.other["official-artwork"].front_default,
+      });
+      for (const next of node.evolves_to) {
+        await buildChain(next);
+      }
+    };
+    await buildChain(evoData.chain);
+    return chainList;
+  }
+
+  const chain = await getEvolutionChain(name);
 
   return (
     <section className={styles.container} style={{ background: gradient }}>
@@ -92,6 +116,25 @@ export default async function PokemonDetailPage({ params }) {
             </div>
           </div>
         </div>
+
+        {chain.length > 1 && (
+          <div className={styles.block}>
+            <h3 className={styles.blockTitle}>Evoluciones</h3>
+            <div className={styles.evolutionChain}>
+              {chain.map((evo, i) => (
+                <div key={evo.name} style={{ display: "flex", alignItems: "center" }}>
+                  {i !== 0 && (
+                    <div className={styles.arrow} style={{ fontSize: "2rem", margin: "0 10px" }}>→</div>
+                  )}
+                  <Link href={`/pokemon/${evo.name}`} className={styles.evolutionCard}>
+                    <img src={evo.img} alt={evo.name} className={styles.evolutionImg} />
+                    <span className={styles.evolutionName}>{evo.name}</span>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <p className={styles.back}>
           <Link href="/pokedex">← Volver a la Pokédex</Link>
