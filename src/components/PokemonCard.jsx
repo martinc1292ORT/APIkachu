@@ -59,10 +59,10 @@ export default function PokemonCard({ name, url }) {
     const color1 = TYPE_COLORS[type1] || "#333";
     const color2 = TYPE_COLORS[type2] || color1;
 
-    // Fondo dividido al 50% para que se vean claramente los dos tipos
+    
     return `linear-gradient(135deg, ${color1} 50%, ${color2} 50%)`;
   };
-
+// COmentario aklwegvailwfvblakv
   return (
     <Link
       href={`/pokemon/${slug}`}
