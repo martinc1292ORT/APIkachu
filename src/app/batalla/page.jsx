@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -11,7 +10,7 @@ const TEAM_SIZE = 6; // cant max de pokémon por equipo
 
 export default function BatallaPage() {
   const router = useRouter();
-  const { user, isAuthenticated, addPoints } = useAuth();
+  const { user, isAuthenticated, addPoints, updateProfile } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState(null);
@@ -32,7 +31,9 @@ export default function BatallaPage() {
     setReport(null);
 
     if (!hasFullTeam) {
-      setError(`No podés pelear: tu equipo NO esta completo (${myTeam.length}/${TEAM_SIZE}) pokémon.`);
+      setError(
+        `No podés pelear: tu equipo NO esta completo (${myTeam.length}/${TEAM_SIZE}) pokémon.`
+      );
       return;
     }
 
@@ -41,6 +42,17 @@ export default function BatallaPage() {
       const result = await simulateBattle(myTeam);
       setReport({ ...result, myTeam });
 
+      // 🔹 1) sumamos batallas jugadas (cuenta toda batalla: win/lose/draw)
+      if (isAuthenticated && user) {
+        const batallasPrevias =
+          typeof user.battles === "number" ? user.battles : 0;
+
+        updateProfile({
+          battles: batallasPrevias + 1,
+        });
+      }
+
+      // 🔹 2) sumamos puntos si corresponde
       if (isAuthenticated && Number(result.awardedPoints) > 0) {
         addPoints(result.awardedPoints);
       }
@@ -62,14 +74,16 @@ export default function BatallaPage() {
             <h1>Batalla</h1>
 
             <p>
-              Peleás contra <strong>{TEAM_SIZE}</strong> pokémon aleatorios. Ganás puntos si estás logueado:
+              Peleás contra <strong>{TEAM_SIZE}</strong> pokémon aleatorios.
+              Ganás puntos si estás logueado:
               <strong> +3</strong> por victoria, <strong>+1</strong> por empate.
             </p>
 
             {!hasFullTeam && (
               <div className={styles.warning}>
-                No podés acceder a la batalla porque tu equipo NO esta completo ({myTeam.length}/{TEAM_SIZE}) pokémon.
-                Completalo en tu perfil antes de pelear.
+                No podés acceder a la batalla porque tu equipo NO esta completo (
+                {myTeam.length}/{TEAM_SIZE}) pokémon. Completalo en tu perfil
+                antes de pelear.
               </div>
             )}
 
@@ -95,8 +109,15 @@ export default function BatallaPage() {
               <>
                 <h2>Resultado: {labelResult(report.result)}</h2>
                 <p>
-                  Rounds ganados: <strong>{report.myWins}</strong> vs <strong>{report.oppWins}</strong>
-                  {isAuthenticated && <> — Puntos otorgados: <strong>{report.awardedPoints}</strong></>}
+                  Rounds ganados: <strong>{report.myWins}</strong> vs{" "}
+                  <strong>{report.oppWins}</strong>
+                  {isAuthenticated && (
+                    <>
+                      {" "}
+                      — Puntos otorgados:{" "}
+                      <strong>{report.awardedPoints}</strong>
+                    </>
+                  )}
                 </p>
 
                 <div className={styles.teams}>
@@ -123,22 +144,40 @@ export default function BatallaPage() {
                   {report.rounds.map((r) => (
                     <div key={r.index} className={styles.round}>
                       <div className={styles.side}>
-                        <img src={r.me.sprite} alt={r.me.name} width={56} height={56} />
+                        <img
+                          src={r.me.sprite}
+                          alt={r.me.name}
+                          width={56}
+                          height={56}
+                        />
                         <div className={styles.name}>{r.me.name}</div>
                         <div className={styles.score}>{r.myScore}</div>
                       </div>
                       <div className={styles.vs}>vs</div>
                       <div className={styles.side}>
-                        <img src={r.opp.sprite} alt={r.opp.name} width={56} height={56} />
+                        <img
+                          src={r.opp.sprite}
+                          alt={r.opp.name}
+                          width={56}
+                          height={56}
+                        />
                         <div className={styles.name}>{r.opp.name}</div>
                         <div className={styles.score}>{r.oppScore}</div>
                       </div>
                       <div
                         className={`${styles.result} ${
-                          r.winner === "me" ? styles.win : r.winner === "opp" ? styles.lose : styles.draw
+                          r.winner === "me"
+                            ? styles.win
+                            : r.winner === "opp"
+                            ? styles.lose
+                            : styles.draw
                         }`}
                       >
-                        {r.winner === "me" ? "Ganado" : r.winner === "opp" ? "Perdido" : "Empate"}
+                        {r.winner === "me"
+                          ? "Ganado"
+                          : r.winner === "opp"
+                          ? "Perdido"
+                          : "Empate"}
                       </div>
                     </div>
                   ))}
@@ -167,7 +206,9 @@ function PokeCard({ p }) {
       <div className={styles.pname}>{p.name}</div>
       <div className={styles.ptypes}>
         {(p.types || []).map((t) => (
-          <span key={t} className={styles.type}>{t}</span>
+          <span key={t} className={styles.type}>
+            {t}
+          </span>
         ))}
       </div>
     </div>
