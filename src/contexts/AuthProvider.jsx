@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-const LS_USERS_KEY = "apikachu_users"; // [{email, passwordHash, name, team, roster, points}]
+const LS_USERS_KEY = "apikachu_users"; // [{email, passwordHash, name, team, roster, points, battles}]
 const LS_SESSION_KEY = "apikachu_session"; // {email}
 const TEAM_SIZE = 6;
 
@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [user, setUser] = useState(null); // {email, name, team, roster, points}
+  const [user, setUser] = useState(null);
 
   // Utils de storage
   function getUsers() {
@@ -73,7 +73,8 @@ export function AuthProvider({ children }) {
         name: userFound.name || "",
         team: userFound.team || [],
         roster: userFound.roster || [],
-        points: userFound.points || 0,
+        points: typeof userFound.points === "number" ? userFound.points : 0,
+        battles: typeof userFound.battles === "number" ? userFound.battles : 0,
       });
     } catch (error) {
       console.log("Hubo un problema cargando la sesión");
@@ -143,12 +144,20 @@ export function AuthProvider({ children }) {
       team,
       roster: [],
       points: 0,
+      battles: 0,
     };
 
     users.push(newUser);
     saveUsers(users);
     startSession(email);
-    setUser({ email, name: name || "", team, roster: [], points: 0 });
+    setUser({
+      email,
+      name: name || "",
+      team,
+      roster: [],
+      points: 0,
+      battles: 0,
+    });
     router.push("/");
   }
 
@@ -165,6 +174,7 @@ export function AuthProvider({ children }) {
 
     if (!user.roster) user.roster = [];
     if (typeof user.points !== "number") user.points = 0;
+    if (typeof user.battles !== "number") user.battles = 0;
 
     if (Array.isArray(user.roster)) {
       user.roster = user.roster.map(ensureUrl);
@@ -187,7 +197,8 @@ export function AuthProvider({ children }) {
       name: user.name || "",
       team: user.team || [],
       roster: user.roster || [],
-      points: user.points || 0,
+      points: typeof user.points === "number" ? user.points : 0,
+      battles: typeof user.battles === "number" ? user.battles : 0,
     });
 
     router.push("/");
@@ -224,52 +235,46 @@ export function AuthProvider({ children }) {
   }
 
   function addPoints(cantidad) {
-    if (!user) return;
+    setUser((prev) => {
+      if (!prev) return prev;
 
-    const puntosAAgregar = Number(cantidad);
+      const nuevosPuntos = (prev.points || 0) + Number(cantidad);
 
-    const usuarioActualizado = persistUserByEmail(
-      user.email,
-      (usuarioViejo) => {
-        const puntosAnteriores = usuarioViejo.points || 0;
-        const nuevosPuntos = puntosAnteriores + puntosAAgregar;
+      persistUserByEmail(prev.email, (u) => ({
+        ...u,
+        points: nuevosPuntos,
+      }));
 
-        return {
-          ...usuarioViejo,
-          points: nuevosPuntos,
-        };
-      }
-    );
-
-    if (usuarioActualizado) {
-      setUser({
-        ...user,
-        points: usuarioActualizado.points,
-      });
-    }
+      return {
+        ...prev,
+        points: nuevosPuntos,
+      };
+    });
   }
 
   function spendPoints(cantidad) {
-    if (!user) throw new Error("No hay usuario activo");
+    setUser((prev) => {
+      if (!prev) throw new Error("No hay usuario activo");
 
-    const puntosAGastar = Number(cantidad);
+      const puntosAGastar = Number(cantidad);
+      const puntosActuales = prev.points || 0;
 
-    const usuarioActualizado = persistUserByEmail(
-      user.email,
-      (usuarioViejo) => {
-        const puntosViejos = usuarioViejo.points || 0;
-        const puntosNuevos = puntosViejos - puntosAGastar;
-
-        if (puntosNuevos < 0) {
-          throw new Error("No tenés puntos suficientes");
-        }
-
-        return {
-          ...usuarioViejo,
-          points: puntosNuevos,
-        };
+      if (puntosActuales < puntosAGastar) {
+        throw new Error("No tenés puntos suficientes");
       }
-    );
+
+      const nuevosPuntos = puntosActuales - puntosAGastar;
+
+      persistUserByEmail(prev.email, (u) => ({
+        ...u,
+        points: nuevosPuntos,
+      }));
+
+      return {
+        ...prev,
+        points: nuevosPuntos,
+      };
+    });
 
     if (usuarioActualizado) {
       setUser({
