@@ -5,7 +5,7 @@ import { getPokemonPrice, purchasePokemon } from "@/lib/store";
 
 export default function BuyAndEquip() {
   const { user, spendPoints, addToRoster, replaceInTeam } = useAuth();
-  const [query, setQuery] = useState(""); // nombre o id
+  const [query, setQuery] = useState("");
   const [price, setPrice] = useState(null);
   const [msg, setMsg] = useState("");
 

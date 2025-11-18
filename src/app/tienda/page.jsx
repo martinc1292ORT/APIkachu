@@ -15,7 +15,7 @@ export default function TiendaPage() {
   const { user, spendPoints, addToRoster } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]); // [{ name, url, id, price }]
-  const [order, setOrder] = useState("asc"); // "asc" | "desc"
+  const [order, setOrder] = useState("asc"); 
   const [q, setQ] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [msg, setMsg] = useState("");
@@ -26,7 +26,7 @@ export default function TiendaPage() {
       setLoading(true);
       setMsg("");
       try {
-        // 1) Traer lista base (name + url)
+
         const res = await fetch(
           `https://pokeapi.co/api/v2/pokemon?limit=${LIMIT}&offset=${OFFSET}`
         );
@@ -39,7 +39,6 @@ export default function TiendaPage() {
           price: null,
         }));
 
-        // 2) Calcular precio por cada pokémon (usa tu computePokemonCost)
         const concurrency = 8;
         const acc = [];
         for (let i = 0; i < base.length; i += concurrency) {
@@ -76,7 +75,7 @@ export default function TiendaPage() {
       ? items.filter((p) => p.name.toLowerCase().includes(term))
       : items;
     const pricedLast = [...byName].sort((a, b) => {
-      // Primero ordenar por precio (nulls al final), luego por nombre
+
       const ap = a.price ?? Infinity;
       const bp = b.price ?? Infinity;
       return order === "asc"
@@ -144,10 +143,9 @@ export default function TiendaPage() {
       <section className={styles.grid}>
         {filtered.map((p) => (
           <div key={p.id ?? p.name} className={styles.cardWrap}>
-            {/* Tu Card: linkea al detalle y muestra la imagen/arte */}
+ 
             <PokemonCard name={p.name} url={p.url} />
 
-            {/* Precio + Comprar */}
             <div className={styles.meta}>
               <div className={styles.price}>
                 Precio:{" "}
