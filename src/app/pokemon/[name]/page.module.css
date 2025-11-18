@@ -192,3 +192,36 @@
 .type--steel     { background: #B0BEC5; color: #000; }
 .type--fairy     { background: #F8BBD0; color: #000; }
 .type--normal    { background: #A8A77A; color: #000; }
+
+/* Evolución */
+.evolutionChain {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.evolutionCard {
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  transition: transform 0.2s;
+}
+
+.evolutionCard:hover {
+  transform: scale(1.05);
+}
+
+.evolutionImg {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.evolutionName {
+  margin-top: 6px;
+  display: block;
+  text-transform: capitalize;
+  font-weight: bold;
+}
