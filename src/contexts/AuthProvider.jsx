@@ -275,13 +275,6 @@ export function AuthProvider({ children }) {
         points: nuevosPuntos,
       };
     });
-
-    if (usuarioActualizado) {
-      setUser({
-        ...user,
-        points: usuarioActualizado.points,
-      });
-    }
   }
 
   function addToRoster(pokemon) {
