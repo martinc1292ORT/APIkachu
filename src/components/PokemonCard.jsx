@@ -1,8 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getIdFromUrl, getArtworkUrlById } from "@/lib/pokeapi";
+import {
+  getIdFromUrl,
+  getArtworkUrlById,
+  getPokemon,
+} from "@/lib/pokeapi";
 import styles from "./PokemonCard.module.css";
+
+const TYPE_COLORS = {
+  normal: "#A8A77A",
+  fire: "#EF5350",
+  water: "#42A5F5",
+  electric: "#F4D23C",
+  grass: "#66BB6A",
+  ice: "#81D4FA",
+  fighting: "#D32F2F",
+  poison: "#AB47BC",
+  ground: "#A1887F",
+  flying: "#90CAF9",
+  psychic: "#F48FB1",
+  bug: "#A8B820",
+  rock: "#B6A136",
+  ghost: "#7C4DFF",
+  dragon: "#6F35FC",
+  dark: "#4E342E",
+  steel: "#B0BEC5",
+  fairy: "#F8BBD0",
+};
 
 export default function PokemonCard({ name, url }) {
   const id = url ? getIdFromUrl(url) : null;
@@ -38,8 +64,14 @@ export default function PokemonCard({ name, url }) {
   };
 
   return (
-    <Link href={`/pokemon/${slug}`} className={styles.card}>
-      {img ? <img src={img} alt={name} className={styles.img} /> : null}
+    <Link
+      href={`/pokemon/${slug}`}
+      className={styles.card}
+      style={hovered ? { background: getHoverBackground(), transform: "scale(1.05)" } : {}}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {img && <img src={img} alt={name} className={styles.img} />}
       <div className={styles.title}>{name}</div>
     </Link>
   );
