@@ -8,7 +8,6 @@ import { simulateBattle } from "@/lib/battle";
 import { useAuth } from "@/contexts/AuthProvider";
 
 const TEAM_SIZE = 6; // cant max de pokémon por equipo
-const TEAM_MIN_SIZE = 1; // cant min de pokémon por equipo
 
 export default function BatallaPage() {
   const router = useRouter();
@@ -27,14 +26,13 @@ export default function BatallaPage() {
 
   const myTeam = useMemo(() => user?.team ?? [], [user?.team]);
   const hasFullTeam = myTeam.length === TEAM_SIZE;
-  const hasMinimumTeam = myTeam.length >= TEAM_MIN_SIZE;
 
   async function onFight() {
     setError("");
     setReport(null);
 
-    if (!hasMinimumTeam) {
-      setError(`No podés pelear: tu equipo debe tener al menos ${TEAM_MIN_SIZE} pokémon.`);
+    if (!hasFullTeam) {
+      setError(`No podés pelear: tu equipo NO esta completo (${myTeam.length}/${TEAM_SIZE}) pokémon.`);
       return;
     }
 
@@ -53,7 +51,7 @@ export default function BatallaPage() {
     }
   }
 
-  // 🔹 Renderizamos siempre los hooks, pero condicionamos el contenido
+  // Renderizamos siempre los hooks, pero condicionamos el contenido
   const isLoggedIn = isAuthenticated && user;
 
   return (
@@ -64,13 +62,13 @@ export default function BatallaPage() {
             <h1>Batalla</h1>
 
             <p>
-              Peleás contra <strong>{myTeam.length}</strong> pokémon aleatorios. Ganás puntos si estás logueado:
+              Peleás contra <strong>{TEAM_SIZE}</strong> pokémon aleatorios. Ganás puntos si estás logueado:
               <strong> +3</strong> por victoria, <strong>+1</strong> por empate.
             </p>
 
-            {!hasMinimumTeam && (
+            {!hasFullTeam && (
               <div className={styles.warning}>
-                No podés acceder a la batalla porque tu equipo debe tener al menos {TEAM_MIN_SIZE} pokémon ({myTeam.length}/{TEAM_MIN_SIZE}).
+                No podés acceder a la batalla porque tu equipo NO esta completo ({myTeam.length}/{TEAM_SIZE}) pokémon.
                 Completalo en tu perfil antes de pelear.
               </div>
             )}
@@ -79,11 +77,11 @@ export default function BatallaPage() {
               <button
                 className={styles.btn}
                 onClick={onFight}
-                disabled={loading || !hasMinimumTeam}
-                aria-disabled={loading || !hasMinimumTeam}
+                disabled={loading || !hasFullTeam}
+                aria-disabled={loading || !hasFullTeam}
                 title={
-                  !hasMinimumTeam
-                    ? `Necesitás al menos ${TEAM_MIN_SIZE} pokémon en tu equipo`
+                  !hasFullTeam
+                    ? `Necesitás ${TEAM_SIZE} pokémon en tu equipo`
                     : undefined
                 }
               >
