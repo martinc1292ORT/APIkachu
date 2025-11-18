@@ -12,6 +12,6 @@ export default function RequireAuth({ children }) {
     if (!isAuthenticated) router.replace("/login");
   }, [isAuthenticated, router]);
 
-  if (!isAuthenticated) return null; // opcional: spinner
+  if (!isAuthenticated) return null;
   return children;
 }

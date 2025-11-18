@@ -1,5 +1,3 @@
-// Utilidades de batalla contra  pokes aleatorios usando PokeAPI
-
 export async function fetchRandomTeam(count = 6) {
   const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
   const data = await res.json();
@@ -33,7 +31,6 @@ export function compactPokemon(d) {
 }
 
 export function extractStats(d) {
-  // d.stats = [{stat:{name}, base_stat}]
   const map = {};
   d.stats?.forEach((s) => { map[s.stat?.name] = s.base_stat; });
   return {
@@ -53,18 +50,16 @@ function powerScore(p) {
     (s.speed || 0) +
     0.5 * (s.defense || 0) +
     0.25 * (s.hp || 0);
-  const rng = Math.floor(Math.random() * 51); // 0..50
+  const rng = Math.floor(Math.random() * 51);
   return Math.round(base + rng);
 }
 
 export async function ensureDetailedTeam(team) {
   return await Promise.all(
     team.map(async (p) => {
-      // Si ya tiene stats, pero en formato array, lo normalizamos
       if (p.stats) {
         if (Array.isArray(p.stats)) {
           const mapa = {};
-          // tus stats guardados son [{ name, base_stat }]
           p.stats.forEach((s) => {
             mapa[s.name] = s.base_stat;
           });
@@ -82,12 +77,9 @@ export async function ensureDetailedTeam(team) {
             stats: statsNormalizadas,
           };
         }
-
-        // Si ya es objeto (enemigos), lo dejamos como está
         return p;
       }
 
-      // Si no tiene stats, voy a la PokeAPI y lo compacto
       const url = `https://pokeapi.co/api/v2/pokemon/${p.id || p.name}`;
       const r = await fetch(url);
       const d = await r.json();
@@ -105,7 +97,6 @@ export async function simulateBattle(userTeamIn) {
   let myWins = 0;
   let oppWins = 0;
 
-  // cantidad de rounds = cantidad de pokémon del usuario
   const roundsCount = userTeam.length;
 
   for (let i = 0; i < roundsCount; i++) {

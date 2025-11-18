@@ -6,7 +6,7 @@ import styles from "./batalla.module.css";
 import { simulateBattle } from "@/lib/battle";
 import { useAuth } from "@/contexts/AuthProvider";
 
-const TEAM_SIZE = 6; // cant max de pokémon por equipo
+const TEAM_SIZE = 6;
 
 export default function BatallaPage() {
   const router = useRouter();
@@ -16,7 +16,6 @@ export default function BatallaPage() {
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
 
-  // Si no está autenticado, redirigimos a /login con next param para volver luego.
   useEffect(() => {
     if (isAuthenticated === false) {
       router.replace(`/login?next=/batalla`);
@@ -42,7 +41,6 @@ export default function BatallaPage() {
       const result = await simulateBattle(myTeam);
       setReport({ ...result, myTeam });
 
-      // 🔹 1) sumamos batallas jugadas (cuenta toda batalla: win/lose/draw)
       if (isAuthenticated && user) {
         const batallasPrevias =
           typeof user.battles === "number" ? user.battles : 0;
@@ -52,7 +50,6 @@ export default function BatallaPage() {
         });
       }
 
-      // 🔹 2) sumamos puntos si corresponde
       if (isAuthenticated && Number(result.awardedPoints) > 0) {
         addPoints(result.awardedPoints);
       }
@@ -63,7 +60,7 @@ export default function BatallaPage() {
     }
   }
 
-  // Renderizamos siempre los hooks, pero condicionamos el contenido
+
   const isLoggedIn = isAuthenticated && user;
 
   return (

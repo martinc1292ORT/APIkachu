@@ -1,6 +1,5 @@
 import { computePokemonCost } from "./pricing";
 
-// Trae detalle por nombre o id (pokeapi)
 export async function fetchPokemonDetail(idOrName) {
   const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${idOrName}`);
   if (!res.ok) throw new Error("No se pudo obtener el pokémon");
@@ -19,16 +18,9 @@ export async function getPokemonPrice(idOrName) {
   return computePokemonCost(detail);
 }
 
-/**
- * Intenta comprar y agregar al roster.
- * - Valida puntos del usuario (useAuth).
- * - Descuenta puntos y agrega al roster.
- * Retorna { bought, cost }
- */
 export async function purchasePokemon(idOrName, spendPoints, addToRoster) {
   const detail = await fetchPokemonDetail(idOrName);
   const cost = computePokemonCost(detail);
-  // puede lanzar error si no alcanza
   spendPoints(cost);
   addToRoster(detail);
   return { bought: detail, cost };

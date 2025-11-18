@@ -309,13 +309,13 @@ export default function PerfilPage() {
                         {/* Coleccion */}
                         <section className={styles.section}>
                             <div className={styles.sectionHeader}>
-                                <h2>Mi Colecci n ({rosterCount})</h2>
+                                <h2>Mi Colección ({rosterCount})</h2>
                             </div>
 
                             <div className={styles.collectionGrid}>
                                 {rosterCount === 0 && (
                                     <div className={styles.emptyCollection}>
-                                        No ten s pok mon en tu colecci n.
+                                        No tenés pokémon en tu colección.
                                     </div>
                                 )}
 

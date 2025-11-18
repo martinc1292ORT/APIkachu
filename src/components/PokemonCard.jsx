@@ -62,7 +62,7 @@ export default function PokemonCard({ name, url }) {
     
     return `linear-gradient(135deg, ${color1} 50%, ${color2} 50%)`;
   };
-// COmentario aklwegvailwfvblakv
+
   return (
     <Link
       href={`/pokemon/${slug}`}

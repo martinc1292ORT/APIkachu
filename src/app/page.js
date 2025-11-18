@@ -113,7 +113,6 @@ export default function Home() {
           </Link>
         </section>
 
-        {/* DESTACADOS */}
         <section className={styles.featured}>
           <h2>Destacados</h2>
           <div className={styles.grid}>
@@ -121,7 +120,6 @@ export default function Home() {
               ? [...Array(6)].map((_, i) => <div key={i} className={styles.skeleton} />)
               : featured.map((p) => (
                   <Link key={p.id} href={`/pokemon/${p.name}`} className={styles.card}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.sprite} alt={p.name} width={72} height={72} />
                     <div className={styles.cardName}>{p.name}</div>
                     <div className={styles.types}>
