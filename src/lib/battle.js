@@ -58,11 +58,36 @@ function powerScore(p) {
 }
 
 export async function ensureDetailedTeam(team) {
- 
   return await Promise.all(
     team.map(async (p) => {
-      if (p.stats) return p;
-      
+      // Si ya tiene stats, pero en formato array, lo normalizamos
+      if (p.stats) {
+        if (Array.isArray(p.stats)) {
+          const mapa = {};
+          // tus stats guardados son [{ name, base_stat }]
+          p.stats.forEach((s) => {
+            mapa[s.name] = s.base_stat;
+          });
+
+          const statsNormalizadas = {
+            hp: mapa.hp || 0,
+            attack: mapa.attack || 0,
+            defense: mapa.defense || 0,
+            "special-attack": mapa["special-attack"] || 0,
+            speed: mapa.speed || 0,
+          };
+
+          return {
+            ...p,
+            stats: statsNormalizadas,
+          };
+        }
+
+        // Si ya es objeto (enemigos), lo dejamos como está
+        return p;
+      }
+
+      // Si no tiene stats, voy a la PokeAPI y lo compacto
       const url = `https://pokeapi.co/api/v2/pokemon/${p.id || p.name}`;
       const r = await fetch(url);
       const d = await r.json();
@@ -70,6 +95,7 @@ export async function ensureDetailedTeam(team) {
     })
   );
 }
+
 
 export async function simulateBattle(userTeamIn) {
   const userTeam = await ensureDetailedTeam(userTeamIn);

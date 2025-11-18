@@ -7,6 +7,41 @@ import styles from "./NavBar.module.css";
 export default function NavBar() {
   const { user, isAuthenticated, logout } = useAuth();
 
+  let puntosDelUsuario = 0;
+  if (user && typeof user.points === "number") {
+    puntosDelUsuario = user.points;
+  }
+
+  // Autenticado
+  let contenidoDerecha = null;
+
+  if (isAuthenticated) {
+    contenidoDerecha = (
+      <>
+        <div className={styles.points}>
+          🪙 {puntosDelUsuario}
+        </div>
+
+        <Link href="/perfil" className={styles.profileLink}>
+          Perfil
+        </Link>
+
+        <button onClick={logout} className={styles.logoutBtn}>
+          Cerrar sesión
+        </button>
+      </>
+    );
+  }
+
+  // No autenticado
+  if (!isAuthenticated) {
+    contenidoDerecha = (
+      <Link href="/login" className={styles.loginBtn}>
+        Iniciar sesión
+      </Link>
+    );
+  }
+
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
@@ -15,36 +50,14 @@ export default function NavBar() {
         </Link>
 
         <div className={styles.menu}>
-          <Link href="/pokedex" className={styles.link}>
-            Pokédex
-          </Link>
-          <Link href="/batalla" className={styles.link}>
-            Batalla
-          </Link>
-          <Link href="/tienda" className={styles.link}>
-            Tienda
-          </Link>
+          <Link href="/pokedex" className={styles.link}>Pokédex</Link>
+          <Link href="/batalla" className={styles.link}>Batalla</Link>
+          <Link href="/tienda" className={styles.link}>Tienda</Link>
         </div>
       </div>
 
       <div className={styles.right}>
-        {isAuthenticated ? (
-          <>
-            <div className={styles.points}>
-              🪙 {user?.points ?? 0}
-            </div>
-            <Link href="/perfil" className={styles.profileLink}>
-              Perfil
-            </Link>
-            <button onClick={logout} className={styles.logoutBtn}>
-              Cerrar sesión
-            </button>
-          </>
-        ) : (
-          <Link href="/login" className={styles.loginBtn}>
-            Iniciar sesión
-          </Link>
-        )}
+        {contenidoDerecha}
       </div>
     </nav>
   );
