@@ -7,9 +7,10 @@ export async function getPokemonList(limit = 24, offset = 0) {
 }
 
 export async function getPokemon(nameOrId) {
-  const key = /^\d+$/.test(String(nameOrId).trim())
-    ? String(nameOrId).trim()
-    : String(nameOrId).toLowerCase().trim();
+  const cleaned = String(nameOrId).trim();
+  const key = Number.isInteger(+cleaned)
+    ? cleaned
+    : cleaned.toLowerCase();
 
   const res = await fetch(`${BASE}/pokemon/${key}`, { cache: "no-store" });
   if (res.status === 404) return null;

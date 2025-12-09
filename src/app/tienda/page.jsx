@@ -90,7 +90,6 @@ export default function TiendaPage() {
   async function handleBuy(p) {
     if (!p?.name) return;
 
-    // 🔒 Si no hay sesión, no intento comprar
     if (!isAuthenticated) {
       setMsg("Debés iniciar sesión para comprar un Pokémon.");
       router.push("/login?from=tienda");
