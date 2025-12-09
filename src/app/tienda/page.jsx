@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; 
 import styles from "./tienda.module.css";
 import PokemonCard from "@/components/PokemonCard";
 import { useAuth } from "@/contexts/AuthProvider";
@@ -12,7 +13,8 @@ const LIMIT = 60;
 const OFFSET = 0;
 
 export default function TiendaPage() {
-  const { user, spendPoints, addToRoster } = useAuth();
+  const router = useRouter();           
+  const { user, spendPoints, addToRoster, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]); // [{ name, url, id, price }]
   const [order, setOrder] = useState("asc"); 
@@ -87,8 +89,17 @@ export default function TiendaPage() {
 
   async function handleBuy(p) {
     if (!p?.name) return;
+
+    // 🔒 Si no hay sesión, no intento comprar
+    if (!isAuthenticated) {
+      setMsg("Debés iniciar sesión para comprar un Pokémon.");
+      router.push("/login?from=tienda");
+      return;
+    }
+
     setMsg("");
     setBusyId(p.id);
+
     try {
       const res = await purchasePokemon(p.name, spendPoints, addToRoster);
       setMsg(`✅ Compraste a ${res.bought.name} por ${res.cost} pts`);
@@ -98,6 +109,7 @@ export default function TiendaPage() {
       setBusyId(null);
     }
   }
+
 
   return (
     <div className={styles.wrap}>
